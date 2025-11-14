@@ -9,10 +9,15 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "seed": "node seed-db.js",
+    "seed:skip-metadata": "node seed-db.js --skip-metadata",
+    "fetch-metadata": "node scripts/fetch-song-metadata.js",
+    "export-metadata": "node scripts/export-metadata-csv.js",
     "verify-db": "node verify-db.js",
     "examples": "node example-queries.js"
   },
   "dependencies": {
+    "axios": "^1.13.2",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.553.0",
     "mongodb": "^6.10.0",
     "papaparse": "^5.5.3",

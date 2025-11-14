@@ -6,6 +6,8 @@ A beautiful analytics dashboard for Music League data, built with React, Vite, a
 
 - 🎵 **Song Search**: Search submitted songs to avoid duplicates across all rounds and leagues
 - 📊 **Analytics Dashboard**: Analyze votes by genre, artist, and popularity
+- 🎼 **Audio Features Analysis**: Discover what types of music perform best using Spotify audio features (energy, danceability, valence, etc.)
+- 🎭 **Genre Analytics**: Comprehensive genre classification and analysis system - **NEW!**
 - 🎨 **Beautiful UI**: Dark theme with playful accents following the design system
 - 📱 **Responsive**: Works on desktop and mobile devices
 
@@ -26,14 +28,27 @@ docker-compose up -d mongodb
 # 2. Install dependencies
 npm install
 
-# 3. Seed the database
+# 3. Configure Spotify API (for audio features)
+cp env.template .env
+# Edit .env and add your Spotify credentials
+
+# 4. Seed the database
 npm run seed
 
-# 4. Verify setup
+# 5. Export metadata for frontend
+npm run export-metadata
+
+# 6. Verify setup
 npm run verify-db
 ```
 
 See [MONGODB_SETUP.md](MONGODB_SETUP.md) for detailed MongoDB documentation.
+
+**Audio Features Analysis:**
+See [SONG_METADATA_GUIDE.md](SONG_METADATA_GUIDE.md) for detailed instructions on setting up Spotify API integration and analyzing song characteristics.
+
+**Genre Analytics:**
+See [GENRE_SEEDING.md](GENRE_SEEDING.md) for instructions on populating the genres collection and adding genre fields to songs.
 
 ### Local Development
 
@@ -121,6 +136,8 @@ For better performance and scalability, data can be stored in MongoDB:
 **Available Scripts:**
 - `npm run seed` - Import CSV data into MongoDB
 - `npm run verify-db` - Verify MongoDB setup and view statistics
+- `node scripts/seed-genres.js` - Populate genres collection and add genre fields to songs
+- `node scripts/query-genres.js` - View example genre queries and statistics
 
 ## Design System
 
@@ -157,3 +174,7 @@ This project follows the "Data Toys" design system with:
 ## Documentation
 
 - [MONGODB_SETUP.md](MONGODB_SETUP.md) - Complete MongoDB setup and usage guide
+- [SONG_METADATA_GUIDE.md](SONG_METADATA_GUIDE.md) - Spotify audio features integration guide
+- [GENRE_SEEDING.md](GENRE_SEEDING.md) - Genre classification and seeding guide - **NEW!**
+- [GENRE_GUIDE.md](GENRE_GUIDE.md) - Working with artist genres from Spotify
+- [DATA_STATUS.md](DATA_STATUS.md) - Current data availability status

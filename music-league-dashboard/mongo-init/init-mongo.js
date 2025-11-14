@@ -9,6 +9,7 @@ db.createCollection('competitors');
 db.createCollection('rounds');
 db.createCollection('submissions');
 db.createCollection('votes');
+db.createCollection('genres');
 
 // Create indexes for better query performance
 db.competitors.createIndex({ leagueId: 1 });
@@ -24,6 +25,8 @@ db.submissions.createIndex({ spotifyUri: 1 });
 db.votes.createIndex({ leagueId: 1, roundId: 1 });
 db.votes.createIndex({ voterId: 1 });
 db.votes.createIndex({ spotifyUri: 1 });
+
+db.genres.createIndex({ name: 1 }, { unique: true });
 
 print('MongoDB initialized successfully with collections and indexes');
 

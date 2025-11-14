@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Overview from './components/Overview';
 import SongSearch from './components/SongSearch';
+import SongsTable from './components/SongsTable';
 import Analytics from './components/Analytics';
 import { loadAllData } from './utils/dataLoader';
 
@@ -55,6 +56,7 @@ function App() {
           <>
             {activeView === 'overview' && <Overview data={data} />}
             {activeView === 'search' && <SongSearch data={data} />}
+            {activeView === 'songs' && <SongsTable data={data} />}
             {activeView === 'analytics' && <Analytics data={data} />}
           </>
         )}

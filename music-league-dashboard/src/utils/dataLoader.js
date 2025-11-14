@@ -25,6 +25,7 @@ export const loadAllData = async () => {
       league2Votes,
       league2Rounds,
       league2Competitors,
+      metadata,
     ] = await Promise.all([
       loadCSV('/data/league-1-Data/submissions.csv'),
       loadCSV('/data/league-1-Data/votes.csv'),
@@ -34,21 +35,56 @@ export const loadAllData = async () => {
       loadCSV('/data/league-2-Data/votes.csv'),
       loadCSV('/data/league-2-Data/rounds.csv'),
       loadCSV('/data/league-2-Data/competitors.csv'),
+      loadCSV('/data/song_metadata.csv').catch(() => {
+        console.warn('⚠️  Song metadata not found. Run "npm run fetch-metadata && npm run export-metadata" to generate it.');
+        return [];
+      }),
     ]);
+
+    // Create a metadata lookup map
+    const metadataMap = new Map();
+    metadata.forEach(m => {
+      metadataMap.set(m['Spotify URI'], {
+        energy: parseFloat(m.Energy),
+        danceability: parseFloat(m.Danceability),
+        valence: parseFloat(m.Valence),
+        acousticness: parseFloat(m.Acousticness),
+        instrumentalness: parseFloat(m.Instrumentalness),
+        liveness: parseFloat(m.Liveness),
+        speechiness: parseFloat(m.Speechiness),
+        tempo: parseFloat(m.Tempo),
+        key: parseInt(m.Key),
+        mode: parseInt(m.Mode),
+        time_signature: parseInt(m['Time Signature']),
+        loudness: parseFloat(m.Loudness),
+        duration_ms: parseInt(m['Duration (ms)']),
+        genre: m.Genre || null,  // Include genre from metadata CSV
+        allGenres: m['All Genres'] ? m['All Genres'].split(';').map(g => g.trim()).filter(g => g) : [],
+      });
+    });
+
+    // Join metadata with submissions
+    const enrichSubmissions = (submissions) => {
+      return submissions.map(submission => ({
+        ...submission,
+        metadata: metadataMap.get(submission['Spotify URI']) || null,
+      }));
+    };
 
     return {
       league1: {
-        submissions: league1Submissions,
+        submissions: enrichSubmissions(league1Submissions),
         votes: league1Votes,
         rounds: league1Rounds,
         competitors: league1Competitors,
       },
       league2: {
-        submissions: league2Submissions,
+        submissions: enrichSubmissions(league2Submissions),
         votes: league2Votes,
         rounds: league2Rounds,
         competitors: league2Competitors,
       },
+      metadata: metadataMap,
     };
   } catch (error) {
     console.error('Error loading data:', error);

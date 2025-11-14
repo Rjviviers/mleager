@@ -1,9 +1,10 @@
-import { Music, BarChart3, Search } from 'lucide-react';
+import { Music, BarChart3, Search, Table } from 'lucide-react';
 
 const Sidebar = ({ activeView, setActiveView }) => {
   const navItems = [
     { id: 'overview', icon: Music, label: 'Overview' },
     { id: 'search', icon: Search, label: 'Search Songs' },
+    { id: 'songs', icon: Table, label: 'Songs Table' },
     { id: 'analytics', icon: BarChart3, label: 'Analytics' },
   ];
 

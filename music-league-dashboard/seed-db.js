@@ -3,6 +3,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Papa from 'papaparse';
+import dotenv from 'dotenv';
+import { spotifyClient } from './src/utils/spotify.js';
+
+// Load environment variables from .env file
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,7 +46,7 @@ async function seedDatabase() {
 
     // Clear existing collections
     console.log('\nClearing existing collections...');
-    const collections = ['competitors', 'rounds', 'submissions', 'votes', 'leagues'];
+    const collections = ['competitors', 'rounds', 'submissions', 'votes', 'leagues', 'song_metadata', 'genres'];
     for (const collectionName of collections) {
       try {
         await db.collection(collectionName).drop();
@@ -170,10 +175,48 @@ async function seedDatabase() {
     await db.collection('rounds').createIndex({ leagueId: 1 });
     await db.collection('submissions').createIndex({ leagueId: 1, roundId: 1 });
     await db.collection('submissions').createIndex({ submitterId: 1 });
+    await db.collection('submissions').createIndex({ spotifyUri: 1 });
     await db.collection('votes').createIndex({ leagueId: 1, roundId: 1 });
     await db.collection('votes').createIndex({ voterId: 1 });
     await db.collection('votes').createIndex({ spotifyUri: 1 });
+    await db.collection('song_metadata').createIndex({ spotifyUri: 1 }, { unique: true });
+    await db.collection('song_metadata').createIndex({ genre: 1 });
+    await db.collection('genres').createIndex({ name: 1 }, { unique: true });
     console.log('Indexes created successfully');
+
+    // Fetch and store song metadata from Spotify
+    const skipMetadata = process.argv.includes('--skip-metadata');
+    if (!skipMetadata) {
+      console.log('\n--- Fetching Song Metadata from Spotify ---');
+      try {
+        // Get all unique Spotify URIs from submissions
+        const allSubmissions = await db.collection('submissions').find({}).toArray();
+        const uniqueSpotifyUris = [...new Set(allSubmissions.map(s => s.spotifyUri))];
+
+        console.log(`Found ${uniqueSpotifyUris.length} unique songs to fetch metadata for`);
+
+        // Fetch audio features from Spotify
+        const audioFeatures = await spotifyClient.getAllAudioFeatures(
+          uniqueSpotifyUris,
+          (progress) => {
+            console.log(`Progress: ${progress.percentage}% (${progress.current}/${progress.total})`);
+          }
+        );
+
+        // Insert metadata into database
+        if (audioFeatures.length > 0) {
+          await db.collection('song_metadata').insertMany(audioFeatures);
+          console.log(`✅ Inserted ${audioFeatures.length} song metadata records`);
+        } else {
+          console.log('⚠️  No audio features were fetched');
+        }
+      } catch (error) {
+        console.error('❌ Error fetching song metadata:', error.message);
+        console.log('Continuing without metadata. You can run the backfill script later.');
+      }
+    } else {
+      console.log('\n⏭️  Skipping metadata fetch (--skip-metadata flag provided)');
+    }
 
     // Print summary
     console.log('\n=== Database Seeding Summary ===');
@@ -182,7 +225,11 @@ async function seedDatabase() {
     console.log(`Rounds: ${await db.collection('rounds').countDocuments()}`);
     console.log(`Submissions: ${await db.collection('submissions').countDocuments()}`);
     console.log(`Votes: ${await db.collection('votes').countDocuments()}`);
+    console.log(`Song Metadata: ${await db.collection('song_metadata').countDocuments()}`);
+    console.log(`Genres: ${await db.collection('genres').countDocuments()}`);
     console.log('\n✅ Database seeded successfully!');
+    console.log('\n💡 To populate genres and add genre field to songs, run:');
+    console.log('   node scripts/seed-genres.js');
 
   } catch (error) {
     console.error('Error seeding database:', error);
