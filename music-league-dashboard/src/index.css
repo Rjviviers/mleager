@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Inter:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-inter bg-gray-100 text-mist antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-poppins;
+  }
+}
+
+@layer utilities {
+  .text-display {
+    font-size: 32px;
+    letter-spacing: -1px;
+  }
+
+  .text-headline {
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .text-caption {
+    font-size: 12px;
+    letter-spacing: 0.2px;
+  }
+}

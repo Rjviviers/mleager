@@ -1,0 +1,237 @@
+{
+  "meta": {
+    "name": "Data Toys Dashboard System",
+    "created": "2025-11-14",
+    "author": "GPT-5.1 Codex",
+    "source": "Visual analysis of provided dashboard mock (Data Toys - Visão Geral)",
+    "purpose": "High-level guidance so AI and designers can recreate the look-and-feel consistently across the product."
+  },
+  "principles": [
+    {
+      "name": "Playful Minimalism",
+      "directives": [
+        "Combine dark, quiet canvases with a few loud toy-like accents.",
+        "Favor large negative space blocks to make the data feel calm and premium.",
+        "Use geometric icons and playful bricks sparingly to hint at the toy brand."
+      ]
+    },
+    {
+      "name": "Contrast With Restraint",
+      "directives": [
+        "Primary contrast comes from neon accents on muted charcoal surfaces.",
+        "Cards always float atop deeper panels using subtle inner highlights.",
+        "Typography contrast (weight, scale) replaces heavy borders whenever possible."
+      ]
+    },
+    {
+      "name": "Guided Focus",
+      "directives": [
+        "Guide the eye from the sidebar to hero stats to analytical panels.",
+        "Stack KPI chips at the top as the first touchpoint for performance.",
+        "Charts and tables inherit a consistent hierarchy: title, filters, content."
+      ]
+    }
+  ],
+  "foundations": {
+    "layout": {
+      "canvas": "Desktop-first dashboard framed within a 1440px wide safe area centered inside a light gray stage.",
+      "grid": "12-column grid with 72px gutters for macro layout; inner card grids use 4px increments on an 8px base.",
+      "spacing_scale": {
+        "base_unit": 8,
+        "steps": {
+          "xxs": 4,
+          "xs": 8,
+          "sm": 12,
+          "md": 16,
+          "lg": 24,
+          "xl": 32,
+          "xxl": 48
+        },
+        "usage": "Outer shell padding 32px; card inset padding 20-24px; icon-only buttons 48px squares."
+      },
+      "radii": {
+        "base": 16,
+        "card": 20,
+        "shell": 24,
+        "usage": "All surfaces feature soft, pill-like corners; sidebar buttons are fully rounded for icon focus."
+      }
+    },
+    "color": {
+      "palette": {
+        "lavender_core": {
+          "value": "#A178F1",
+          "usage": "Brand hero accent, tab primary, playful bricks"
+        },
+        "mint_pulse": {
+          "value": "#4EE2B5",
+          "usage": "Revenue highlights, positive states"
+        },
+        "cyan_flash": {
+          "value": "#2EC9FF",
+          "usage": "Items sold, secondary CTAs"
+        },
+        "sun_spark": {
+          "value": "#FFE200",
+          "usage": "Alert badges, performance markers"
+        },
+        "magenta_pop": {
+          "value": "#E044A7",
+          "usage": "Charts emphasis, tertiary focus"
+        },
+        "charcoal_base": {
+          "value": "#18171F",
+          "usage": "Primary application background"
+        },
+        "graphite_panel": {
+          "value": "#1F1E26",
+          "usage": "Card backgrounds"
+        },
+        "ink": {
+          "value": "#0D0C13",
+          "usage": "Sidebar strip and deepest surfaces"
+        },
+        "mist": {
+          "value": "#D3CFDA",
+          "usage": "Light text on dark surfaces"
+        },
+        "smoke": {
+          "value": "#8D889B",
+          "usage": "Secondary text and captions"
+        }
+      },
+      "gradients": [
+        {
+          "name": "lego_duo",
+          "value": "linear-gradient(135deg, #2EC9FF 0%, #A178F1 100%)",
+          "usage": "Decorative bricks, onboarding cards"
+        }
+      ],
+      "rules": [
+        "Only one neon accent per card to avoid noise.",
+        "Use mist text on graphite panels, smoke text for captions.",
+        "Apply subtle inner stroke (#FFFFFF0D) to accent cards for glow."
+      ]
+    },
+    "typography": {
+      "families": [
+        {
+          "name": "Poppins",
+          "usage": "Headlines, KPI numbers",
+          "weights": {
+            "regular": 400,
+            "medium": 500,
+            "semibold": 600
+          }
+        },
+        {
+          "name": "Inter",
+          "usage": "Body copy, labels, navigation",
+          "weights": {
+            "regular": 400,
+            "medium": 500
+          }
+        }
+      ],
+      "scale": {
+        "display": {"size": 32, "tracking": -1, "usage": "Dashboard title"},
+        "headline": {"size": 20, "tracking": -0.5, "usage": "Panel headings"},
+        "body": {"size": 14, "tracking": 0, "usage": "Labels, descriptions"},
+        "caption": {"size": 12, "tracking": 0.2, "usage": "Meta info within cards"}
+      },
+      "rules": [
+        "Use uppercase labels only in sidebar and tab tags.",
+        "Mix font weights instead of font sizes for emphasis inside cards.",
+        "All text is anti-aliased on dark backgrounds to maintain fidelity."
+      ]
+    },
+    "iconography": {
+      "style": "Rounded geometric icons with consistent stroke width (2px or filled).",
+      "grid": 24,
+      "treatments": [
+        "Icons are always centered within 48x48 chips.",
+        "Sidebar icons invert color when active, plus a mint indicator pill."
+      ]
+    },
+    "effects": {
+      "elevation": {
+        "card": "0 20px 35px rgba(0,0,0,0.35)",
+        "floating_chip": "inset 0 0 0 1px #FFFFFF0C, 0 10px 20px rgba(0,0,0,0.45)"
+      },
+      "dividers": "Use soft 1px lines (#FFFFFF08) only when grouping inside a card.",
+      "glows": "Accent chips can add a 20px blurred glow of the accent color at 25% opacity."
+    }
+  },
+  "components": {
+    "app_shell": {
+      "structure": "Full-bleed light-gray stage hosting a rounded dark dashboard shell with 24px radius.",
+      "sections": [
+        "Left vertical navigation bar (fixed width ~80px).",
+        "Central analytics canvas with stacked cards."
+      ],
+      "spacing": "Outer margin 40px from stage; internal gutters 24px."
+    },
+    "sidebar_nav": {
+      "structure": "Column with icon buttons, each 56px tall, centered; top houses brand glyph circle.",
+      "states": {
+        "default": "Icon in smoke on ink surface.",
+        "active": "Button background graphite_panel, inset mint pill to the left, icon in mint."
+      },
+      "interactions": "Hover lifts button 4px with glow; active tab persists as user scrolls."
+    },
+    "header": {
+      "content": [
+        "Brand title 'Data Toys' in display type.",
+        "Subtitle with locale language tone in smoke text."
+      ],
+      "adjacent_actions": "Right corner hosts floating lego bricks illustration overlapping shell."
+    },
+    "stat_cards": {
+      "variants": [
+        "Receita (mint accent) with icon medallion left-aligned.",
+        "Pedidos (lavender) and Itens Vendidos (cyan)."
+      ],
+      "structure": "Card height 120px, 20px padding, top tag line, bold metric, small delta text.",
+      "interaction": "Entire card clickable; focus ring uses accent color at 35% opacity."
+    },
+    "tab_switcher": {
+      "style": "Segmented control underlined by accent strokes; active tab uses accent and 2px glow.",
+      "usage": "Filters between revenue, orders, items."
+    },
+    "analysis_panels": {
+      "types": [
+        "chart_timeline",
+        "ranking_list",
+        "category_split",
+        "goal_progress",
+        "regional_performance"
+      ],
+      "shared_rules": [
+        "Panel titles pinned top-left; optional helper text or dropdown lives opposite.",
+        "Content zone uses 16px inner padding with 12px rounded corners."
+      ]
+    },
+    "chart_canvas": {
+      "surface": "#111015 with inset highlight #FFFFFF08 to simulate glass.",
+      "gridlines": "#FFFFFF10",
+      "data_colors": [
+        "#4EE2B5",
+        "#2EC9FF",
+        "#A178F1"
+      ],
+      "legends": "Rounded pills with 8px horizontal padding, 4px vertical."
+    },
+    "badges": {
+      "shape": "Capsule with 999 radius, min height 24px.",
+      "color_logic": {
+        "success": "#4EE2B5",
+        "warning": "#FFE200",
+        "info": "#2EC9FF"
+      }
+    },
+    "floating_bricks": {
+      "description": "Decorative lego blocks in cyan and lavender with simple highlights and drop shadows.",
+      "placement": "Top-right of hero panel; can appear elsewhere sparingly to add whimsy."
+    }
+  }
+}
+

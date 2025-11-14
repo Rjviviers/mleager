@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: music-league-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: music_league
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - music-league-network
+    restart: unless-stopped
+
+  music-league-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: music-league-dashboard
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    networks:
+      - music-league-network
+    depends_on:
+      - mongodb
+
+networks:
+  music-league-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+
