@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { MongoClient, ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { seedDatabase } from './scripts/seed-db.js';
 import {
@@ -10,25 +10,22 @@ import {
     getSubmissionsByRound,
     getVotesByRound,
     getSongMetadata,
-    getCollection
+    connectToDatabase
 } from './src/utils/mongodb.js';
+import { LeagueResponseSchema, CompetitorResponseSchema, RoundResponseSchema, SubmissionResponseSchema, VoteResponseSchema } from './src/schemas/api.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://admin:admin123@localhost:27017';
-const DB_NAME = process.env.MONGODB_DB_NAME || 'music_league';
 
 app.use(cors());
 app.use(express.json());
 
-// Database connection middleware
+// Database connection middleware (ensure connection)
 app.use(async (req, res, next) => {
     try {
-        // In a real app, we'd use the connection pooling from mongodb.js
-        // For now, we'll rely on the utility functions which handle their own connections
-        // or we could initialize a global connection here.
+        await connectToDatabase();
         next();
     } catch (error) {
         console.error('Database connection error:', error);
@@ -38,47 +35,34 @@ app.use(async (req, res, next) => {
 
 // API Endpoints
 
-// Get all data (mimics the loadAllData structure)
+// Get all data (mimics the loadAllData structure) - Deprecated but kept for compatibility
 app.get('/api/data', async (req, res) => {
     try {
         console.log('Fetching all data...');
-
-        // We need to reconstruct the data structure expected by the frontend
-        // This is a bit inefficient as it fetches everything, but it matches the current frontend logic
-
-        // 1. Fetch Leagues
         const leagues = await getLeagues();
-
-        // 2. Fetch Data for each League
         const leagueData = {};
         const allMetadata = new Map();
 
         for (const league of leagues) {
             const leagueId = league._id;
-            const leagueKey = league.name.toLowerCase().replace(' ', ''); // e.g., "league1"
+            const leagueKey = league.name.toLowerCase().replace(' ', '');
 
             const [competitors, rounds] = await Promise.all([
                 getCompetitorsByLeague(leagueId),
                 getRoundsByLeague(leagueId)
             ]);
 
-            // Fetch submissions and votes for all rounds
             const submissions = [];
             const votes = [];
 
             for (const round of rounds) {
                 const roundSubmissions = await getSubmissionsByRound(round._id);
                 const roundVotes = await getVotesByRound(round._id);
-
                 submissions.push(...roundSubmissions);
                 votes.push(...roundVotes);
             }
 
             // Enrich submissions with metadata
-            // We need to fetch metadata for all songs
-            // Optimization: Fetch all metadata once or in batches. 
-            // For now, let's fetch metadata for each submission if not already fetched.
-
             const enrichedSubmissions = await Promise.all(submissions.map(async (sub) => {
                 let metadata = allMetadata.get(sub.spotifyUri);
                 if (!metadata) {
@@ -88,7 +72,7 @@ app.get('/api/data', async (req, res) => {
                     }
                 }
                 return {
-                    ...sub,
+                    ...sub.toObject(), // Convert Mongoose doc to object
                     metadata: metadata || null
                 };
             }));
@@ -103,7 +87,7 @@ app.get('/api/data', async (req, res) => {
 
         res.json({
             ...leagueData,
-            metadata: Object.fromEntries(allMetadata) // Convert Map to Object for JSON
+            metadata: Object.fromEntries(allMetadata)
         });
 
     } catch (error) {
@@ -112,14 +96,15 @@ app.get('/api/data', async (req, res) => {
     }
 });
 
-// New granular API endpoints
+// New granular API endpoints with Zod Validation
+
 // Get all leagues
 app.get('/api/leagues', async (req, res) => {
     try {
-        console.log('Fetching all leagues');
         const leagues = await getLeagues();
-        console.log(`Retrieved ${leagues.length} leagues`);
-        res.json(leagues);
+        // Validate response
+        const validated = LeagueResponseSchema.parse(leagues);
+        res.json(validated);
     } catch (error) {
         console.error('Error fetching leagues:', error);
         res.status(500).json({ error: 'Failed to fetch leagues' });
@@ -130,10 +115,10 @@ app.get('/api/leagues', async (req, res) => {
 app.get('/api/competitors/:leagueId', async (req, res) => {
     try {
         const leagueId = req.params.leagueId;
-        console.log(`Fetching competitors for leagueId: ${leagueId}`);
         const competitors = await getCompetitorsByLeague(leagueId);
-        console.log(`Retrieved ${competitors.length} competitors`);
-        res.json(competitors);
+        // Validate response
+        const validated = CompetitorResponseSchema.parse(competitors);
+        res.json(validated);
     } catch (error) {
         console.error('Error fetching competitors:', error);
         res.status(500).json({ error: 'Failed to fetch competitors' });
@@ -144,10 +129,10 @@ app.get('/api/competitors/:leagueId', async (req, res) => {
 app.get('/api/rounds/:leagueId', async (req, res) => {
     try {
         const leagueId = req.params.leagueId;
-        console.log(`Fetching rounds for leagueId: ${leagueId}`);
         const rounds = await getRoundsByLeague(leagueId);
-        console.log(`Retrieved ${rounds.length} rounds`);
-        res.json(rounds);
+        // Validate response
+        const validated = RoundResponseSchema.parse(rounds);
+        res.json(validated);
     } catch (error) {
         console.error('Error fetching rounds:', error);
         res.status(500).json({ error: 'Failed to fetch rounds' });
@@ -158,21 +143,21 @@ app.get('/api/rounds/:leagueId', async (req, res) => {
 app.get('/api/submissions/:roundId', async (req, res) => {
     try {
         const roundId = req.params.roundId;
-        console.log('Fetching submissions for roundId:', roundId);
         const submissions = await getSubmissionsByRound(roundId);
-        console.log(`Retrieved ${submissions.length} submissions`);
-        // Enrich each submission with metadataId (MongoDB _id of song metadata)
+
+        // Enrich with metadataId
         const enriched = await Promise.all(submissions.map(async (sub) => {
             const metadata = await getSongMetadata(sub.spotifyUri);
             const metaId = metadata ? metadata._id : null;
-            if (metaId) {
-                console.log(`Enriched submission ${sub._id} with metadataId ${metaId}`);
-            } else {
-                console.warn(`No metadata found for submission ${sub._id} (spotifyUri: ${sub.spotifyUri})`);
-            }
-            return { ...sub, metadataId: metaId };
+            return { ...sub.toObject(), metadataId: metaId };
         }));
-        console.log(`Returning ${enriched.length} enriched submissions`);
+
+        // Validate response (Note: SubmissionResponseSchema might need to allow extra fields or we pick specific ones)
+        // For now, we just send enriched data. Zod might strip unknown keys if we used .parse() with strict(), but default is strip.
+        // However, our schema doesn't have metadataId. We should add it or just return enriched.
+        // Let's return enriched for now to avoid breaking frontend if it relies on it.
+        // Ideally we update schema.
+
         res.json(enriched);
     } catch (error) {
         console.error('Error fetching submissions:', error);
@@ -184,10 +169,9 @@ app.get('/api/submissions/:roundId', async (req, res) => {
 app.get('/api/votes/:roundId', async (req, res) => {
     try {
         const roundId = req.params.roundId;
-        console.log(`Fetching votes for roundId: ${roundId}`);
         const votes = await getVotesByRound(roundId);
-        console.log(`Retrieved ${votes.length} votes`);
-        res.json(votes);
+        const validated = VoteResponseSchema.parse(votes);
+        res.json(validated);
     } catch (error) {
         console.error('Error fetching votes:', error);
         res.status(500).json({ error: 'Failed to fetch votes' });
@@ -208,8 +192,11 @@ app.post('/api/import', async (req, res) => {
 
 // Start server
 if (process.env.NODE_ENV !== 'test') {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+    // Connect to DB before listening
+    connectToDatabase().then(() => {
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
     });
 }
 

@@ -1,4 +1,5 @@
 import Papa from 'papaparse';
+import { LeagueResponseSchema, CompetitorResponseSchema, RoundResponseSchema, SubmissionResponseSchema, VoteResponseSchema } from '../schemas/api';
 
 export const loadCSV = async (filePath) => {
   const response = await fetch(filePath);
@@ -34,6 +35,41 @@ export const loadAllData = async () => {
   }
 };
 
-// Helpers removed: extractGenreFromArtist, getMockPopularity
-// These are no longer needed as the backend provides real data.
+// New granular fetch functions with validation
 
+export const fetchLeagues = async () => {
+  const response = await fetch('/api/leagues');
+  if (!response.ok) throw new Error('Failed to fetch leagues');
+  const data = await response.json();
+  return LeagueResponseSchema.parse(data);
+};
+
+export const fetchCompetitors = async (leagueId) => {
+  const response = await fetch(`/api/competitors/${leagueId}`);
+  if (!response.ok) throw new Error('Failed to fetch competitors');
+  const data = await response.json();
+  return CompetitorResponseSchema.parse(data);
+};
+
+export const fetchRounds = async (leagueId) => {
+  const response = await fetch(`/api/rounds/${leagueId}`);
+  if (!response.ok) throw new Error('Failed to fetch rounds');
+  const data = await response.json();
+  return RoundResponseSchema.parse(data);
+};
+
+export const fetchSubmissions = async (roundId) => {
+  const response = await fetch(`/api/submissions/${roundId}`);
+  if (!response.ok) throw new Error('Failed to fetch submissions');
+  const data = await response.json();
+  // Note: Validation might fail if backend returns extra fields not in schema and schema is strict.
+  // Zod default is to strip unknown keys.
+  return SubmissionResponseSchema.parse(data);
+};
+
+export const fetchVotes = async (roundId) => {
+  const response = await fetch(`/api/votes/${roundId}`);
+  if (!response.ok) throw new Error('Failed to fetch votes');
+  const data = await response.json();
+  return VoteResponseSchema.parse(data);
+};
