@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import Papa from 'papaparse';
 import dotenv from 'dotenv';
-import { spotifyClient } from './src/utils/spotify.js';
+import { spotifyClient } from '../src/utils/spotify.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -18,8 +18,8 @@ const DB_NAME = 'music_league';
 
 // Data directories
 const LEAGUE_DIRS = [
-  'public/data/league-1-Data',
-  'public/data/league-2-Data'
+  '../public/data/league-1-Data',
+  '../public/data/league-2-Data'
 ];
 
 async function readCSV(filePath) {

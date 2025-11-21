@@ -118,7 +118,7 @@ if [ $? -eq 0 ]; then
     echo "   Re-seed: npm run seed"
     echo "   Verify: npm run verify-db"
     echo ""
-    echo "📖 For more information, see MONGODB_SETUP.md"
+    echo "📖 For more information, see Documentation/MONGODB_SETUP.md"
     echo ""
 else
     echo -e "${RED}❌ Failed to seed database${NC}"

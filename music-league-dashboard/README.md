@@ -42,13 +42,13 @@ npm run export-metadata
 npm run verify-db
 ```
 
-See [MONGODB_SETUP.md](MONGODB_SETUP.md) for detailed MongoDB documentation.
+See [MONGODB_SETUP.md](Documentation/MONGODB_SETUP.md) for detailed MongoDB documentation.
 
 **Audio Features Analysis:**
-See [SONG_METADATA_GUIDE.md](SONG_METADATA_GUIDE.md) for detailed instructions on setting up Spotify API integration and analyzing song characteristics.
+See [SONG_METADATA_GUIDE.md](Documentation/SONG_METADATA_GUIDE.md) for detailed instructions on setting up Spotify API integration and analyzing song characteristics.
 
 **Genre Analytics:**
-See [GENRE_SEEDING.md](GENRE_SEEDING.md) for instructions on populating the genres collection and adding genre fields to songs.
+See [GENRE_SEEDING.md](Documentation/GENRE_SEEDING.md) for instructions on populating the genres collection and adding genre fields to songs.
 
 ### Local Development
 
@@ -130,7 +130,7 @@ Data is loaded from CSV files in `public/data/`:
 ### MongoDB (Optional)
 For better performance and scalability, data can be stored in MongoDB:
 - Run `./setup-mongodb.sh` to set up and seed the database
-- See [MONGODB_SETUP.md](MONGODB_SETUP.md) for details
+- See [MONGODB_SETUP.md](Documentation/MONGODB_SETUP.md) for details
 - MongoDB runs on `localhost:27017` with Docker
 
 **Available Scripts:**
@@ -173,8 +173,8 @@ This project follows the "Data Toys" design system with:
 
 ## Documentation
 
-- [MONGODB_SETUP.md](MONGODB_SETUP.md) - Complete MongoDB setup and usage guide
-- [SONG_METADATA_GUIDE.md](SONG_METADATA_GUIDE.md) - Spotify audio features integration guide
-- [GENRE_SEEDING.md](GENRE_SEEDING.md) - Genre classification and seeding guide - **NEW!**
-- [GENRE_GUIDE.md](GENRE_GUIDE.md) - Working with artist genres from Spotify
-- [DATA_STATUS.md](DATA_STATUS.md) - Current data availability status
+- [MONGODB_SETUP.md](Documentation/MONGODB_SETUP.md) - Complete MongoDB setup and usage guide
+- [SONG_METADATA_GUIDE.md](Documentation/SONG_METADATA_GUIDE.md) - Spotify audio features integration guide
+- [GENRE_SEEDING.md](Documentation/GENRE_SEEDING.md) - Genre classification and seeding guide - **NEW!**
+- [GENRE_GUIDE.md](Documentation/GENRE_GUIDE.md) - Working with artist genres from Spotify
+- [DATA_STATUS.md](Documentation/DATA_STATUS.md) - Current data availability status
