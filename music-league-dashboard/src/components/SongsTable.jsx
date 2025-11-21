@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { extractGenreFromArtist } from '../utils/dataLoader';
 import { ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 
 const SongsTable = ({ data }) => {
@@ -21,7 +20,6 @@ const SongsTable = ({ data }) => {
     ];
 
     return allSongs.map(song => {
-      const genre = extractGenreFromArtist(song['Artist(s)']);
       const spotifyUri = song['Spotify URI'];
 
       // Calculate total votes for this song
@@ -38,20 +36,11 @@ const SongsTable = ({ data }) => {
         album: song.Album,
         spotifyUri: spotifyUri,
         league: song.league,
-        genre: genre,
+        genre: metadata.genre || 'Unknown',
         totalVotes: totalVotes,
         voteCount: voteCount,
         avgVotes: voteCount > 0 ? (totalVotes / voteCount).toFixed(1) : 0,
-        // Audio features
-        energy: metadata.energy !== undefined ? (metadata.energy * 100).toFixed(0) : '-',
-        danceability: metadata.danceability !== undefined ? (metadata.danceability * 100).toFixed(0) : '-',
-        valence: metadata.valence !== undefined ? (metadata.valence * 100).toFixed(0) : '-',
-        acousticness: metadata.acousticness !== undefined ? (metadata.acousticness * 100).toFixed(0) : '-',
-        tempo: metadata.tempo !== undefined ? Math.round(metadata.tempo) : '-',
-        loudness: metadata.loudness !== undefined ? metadata.loudness.toFixed(1) : '-',
-        duration: metadata.duration_ms !== undefined ? formatDuration(metadata.duration_ms) : '-',
-        key: metadata.key !== undefined ? formatKey(metadata.key) : '-',
-        mode: metadata.mode !== undefined ? (metadata.mode === 1 ? 'Major' : 'Minor') : '-',
+        popularity: metadata.popularity || 0,
         hasMetadata: Object.keys(metadata).length > 0,
       };
     });
@@ -70,15 +59,9 @@ const SongsTable = ({ data }) => {
       let bVal = b[sortField];
 
       // Handle numeric values
-      if (sortField === 'totalVotes' || sortField === 'voteCount' || sortField === 'avgVotes') {
+      if (sortField === 'totalVotes' || sortField === 'voteCount' || sortField === 'avgVotes' || sortField === 'popularity') {
         aVal = parseFloat(aVal) || 0;
         bVal = parseFloat(bVal) || 0;
-      } else if (sortField === 'energy' || sortField === 'danceability' || sortField === 'valence' || sortField === 'acousticness') {
-        aVal = aVal === '-' ? -1 : parseFloat(aVal);
-        bVal = bVal === '-' ? -1 : parseFloat(bVal);
-      } else if (sortField === 'tempo') {
-        aVal = aVal === '-' ? -1 : parseInt(aVal);
-        bVal = bVal === '-' ? -1 : parseInt(bVal);
       }
 
       if (sortDirection === 'asc') {
@@ -129,11 +112,10 @@ const SongsTable = ({ data }) => {
             <button
               key={league}
               onClick={() => setSelectedLeague(league)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                selectedLeague === league
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeague === league
                   ? 'bg-mint text-charcoal'
                   : 'bg-charcoal text-smoke hover:text-mist'
-              }`}
+                }`}
             >
               {league === 'all' ? 'All Leagues' : league}
             </button>
@@ -194,29 +176,11 @@ const SongsTable = ({ data }) => {
                 </th>
                 <th className="text-right p-4 text-sm font-medium text-smoke">
                   <button
-                    onClick={() => handleSort('energy')}
+                    onClick={() => handleSort('popularity')}
                     className="flex items-center gap-2 ml-auto hover:text-mist transition-colors"
                   >
-                    Energy
-                    <SortIcon field="energy" />
-                  </button>
-                </th>
-                <th className="text-right p-4 text-sm font-medium text-smoke">
-                  <button
-                    onClick={() => handleSort('danceability')}
-                    className="flex items-center gap-2 ml-auto hover:text-mist transition-colors"
-                  >
-                    Dance
-                    <SortIcon field="danceability" />
-                  </button>
-                </th>
-                <th className="text-right p-4 text-sm font-medium text-smoke">
-                  <button
-                    onClick={() => handleSort('valence')}
-                    className="flex items-center gap-2 ml-auto hover:text-mist transition-colors"
-                  >
-                    Mood
-                    <SortIcon field="valence" />
+                    Popularity
+                    <SortIcon field="popularity" />
                   </button>
                 </th>
                 <th className="text-center p-4 text-sm font-medium text-smoke">
@@ -237,20 +201,18 @@ const SongsTable = ({ data }) => {
                     </td>
                     <td className="p-4 text-smoke">{song.artist}</td>
                     <td className="p-4">
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                        song.genre === 'Other'
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${song.genre === 'Other'
                           ? 'bg-smoke/20 text-smoke'
                           : 'bg-lavender/20 text-lavender'
-                      }`}>
+                        }`}>
                         {song.genre}
                       </span>
                     </td>
                     <td className="p-4">
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                        song.league === 'League 1'
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${song.league === 'League 1'
                           ? 'bg-mint/20 text-mint'
                           : 'bg-cyan-flash/20 text-cyan-flash'
-                      }`}>
+                        }`}>
                         {song.league}
                       </span>
                     </td>
@@ -259,19 +221,15 @@ const SongsTable = ({ data }) => {
                       <div className="text-xs text-smoke">({song.voteCount} votes)</div>
                     </td>
                     <td className="p-4 text-right">
-                      <span className={song.hasMetadata ? 'text-mist' : 'text-smoke/50'}>
-                        {song.energy}{song.hasMetadata && '%'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <span className={song.hasMetadata ? 'text-mist' : 'text-smoke/50'}>
-                        {song.danceability}{song.hasMetadata && '%'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right">
-                      <span className={song.hasMetadata ? 'text-mist' : 'text-smoke/50'}>
-                        {song.valence}{song.hasMetadata && '%'}
-                      </span>
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="w-16 h-1.5 bg-charcoal rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-lavender rounded-full"
+                            style={{ width: `${song.popularity}%` }}
+                          />
+                        </div>
+                        <span className="text-mist text-xs w-6">{song.popularity}</span>
+                      </div>
                     </td>
                     <td className="p-4 text-center">
                       <button
@@ -287,32 +245,6 @@ const SongsTable = ({ data }) => {
                       <td colSpan="9" className="p-6">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           <div>
-                            <div className="text-xs text-smoke mb-1">Acousticness</div>
-                            <div className="text-mist font-medium">
-                              {song.acousticness}{song.hasMetadata && '%'}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-smoke mb-1">Tempo (BPM)</div>
-                            <div className="text-mist font-medium">{song.tempo}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-smoke mb-1">Loudness (dB)</div>
-                            <div className="text-mist font-medium">{song.loudness}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-smoke mb-1">Duration</div>
-                            <div className="text-mist font-medium">{song.duration}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-smoke mb-1">Key</div>
-                            <div className="text-mist font-medium">{song.key}</div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-smoke mb-1">Mode</div>
-                            <div className="text-mist font-medium">{song.mode}</div>
-                          </div>
-                          <div>
                             <div className="text-xs text-smoke mb-1">Avg Vote</div>
                             <div className="text-mint font-medium">{song.avgVotes}</div>
                           </div>
@@ -321,13 +253,6 @@ const SongsTable = ({ data }) => {
                             <div className="text-xs text-smoke truncate font-mono">{song.spotifyUri}</div>
                           </div>
                         </div>
-                        {!song.hasMetadata && (
-                          <div className="mt-4 p-3 bg-sun/10 border border-sun/20 rounded-lg">
-                            <p className="text-sm text-sun">
-                              ⚠️ No metadata available for this song. Run the metadata fetch scripts to get audio features.
-                            </p>
-                          </div>
-                        )}
                       </td>
                     </tr>
                   )}
@@ -351,17 +276,4 @@ const SongsTable = ({ data }) => {
   );
 };
 
-// Helper functions
-function formatDuration(ms) {
-  const minutes = Math.floor(ms / 60000);
-  const seconds = Math.floor((ms % 60000) / 1000);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-}
-
-function formatKey(keyNum) {
-  const keys = ['C', 'C♯/D♭', 'D', 'D♯/E♭', 'E', 'F', 'F♯/G♭', 'G', 'G♯/A♭', 'A', 'A♯/B♭', 'B'];
-  return keys[keyNum] || '-';
-}
-
 export default SongsTable;
-

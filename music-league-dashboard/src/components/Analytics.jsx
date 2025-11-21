@@ -1,13 +1,12 @@
 import { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, ScatterChart, Scatter } from 'recharts';
-import { getMockPopularity } from '../utils/dataLoader';
-import AudioFeaturesAnalytics from './AudioFeaturesAnalytics';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, ScatterChart, Scatter } from 'recharts';
 
 const COLORS = ['#4EE2B5', '#2EC9FF', '#A178F1', '#E044A7', '#FFE200'];
 
 const Analytics = ({ data }) => {
   const [selectedLeague, setSelectedLeague] = useState('league1');
-  const [viewType, setViewType] = useState('audioFeatures');
+  const [viewType, setViewType] = useState('genre');
 
   const leagueData = data?.[selectedLeague];
 
@@ -110,7 +109,7 @@ const Analytics = ({ data }) => {
       const spotifyUri = submission['Spotify URI'];
       const votes = leagueData.votes.filter(v => v['Spotify URI'] === spotifyUri);
       const totalPoints = votes.reduce((sum, v) => sum + parseInt(v['Points Assigned'] || 0), 0);
-      const popularity = getMockPopularity(submission.Title);
+      const popularity = submission.metadata?.popularity || 0;
 
       return {
         title: submission.Title,
@@ -139,21 +138,19 @@ const Analytics = ({ data }) => {
             <div className="flex gap-2">
               <button
                 onClick={() => setSelectedLeague('league1')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  selectedLeague === 'league1'
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeague === 'league1'
                     ? 'bg-mint text-charcoal'
                     : 'bg-charcoal text-smoke hover:text-mist'
-                }`}
+                  }`}
               >
                 League 1
               </button>
               <button
                 onClick={() => setSelectedLeague('league2')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  selectedLeague === 'league2'
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeague === 'league2'
                     ? 'bg-mint text-charcoal'
                     : 'bg-charcoal text-smoke hover:text-mist'
-                }`}
+                  }`}
               >
                 League 2
               </button>
@@ -163,17 +160,16 @@ const Analytics = ({ data }) => {
           <div>
             <label className="text-sm text-smoke mb-2 block">View</label>
             <div className="flex gap-2 flex-wrap">
-              {['audioFeatures', 'genre', 'artist', 'popularity'].map((type) => (
+              {['genre', 'artist', 'popularity'].map((type) => (
                 <button
                   key={type}
                   onClick={() => setViewType(type)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${
-                    viewType === type
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${viewType === type
                       ? 'bg-lavender text-white'
                       : 'bg-charcoal text-smoke hover:text-mist'
-                  }`}
+                    }`}
                 >
-                  {type === 'audioFeatures' ? 'Audio Features' : type}
+                  {type}
                 </button>
               ))}
             </div>
@@ -181,10 +177,7 @@ const Analytics = ({ data }) => {
         </div>
       </div>
 
-      {/* Audio Features Analysis */}
-      {viewType === 'audioFeatures' && (
-        <AudioFeaturesAnalytics leagueData={leagueData} />
-      )}
+
 
       {/* Genre Analysis */}
       {viewType === 'genre' && (

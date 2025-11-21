@@ -239,10 +239,73 @@ async function fetchGenres() {
         }));
 
         const result = await db.collection('artist_info').bulkWrite(bulkOps);
-        console.log(`✅ Upserted ${result.upsertedCount + result.modifiedCount} records`);
+        console.log(`✅ Upserted ${result.upsertedCount + result.modifiedCount} artist records`);
       } else {
         await db.collection('artist_info').insertMany(artistInfo);
-        console.log(`✅ Inserted ${artistInfo.length} new records`);
+        console.log(`✅ Inserted ${artistInfo.length} new artist records`);
+      }
+
+      // NEW: Update song_metadata with genres
+      console.log(`\n💾 Updating song genres in metadata...`);
+
+      // Create a map of artist ID to genre
+      const artistGenreMap = new Map();
+      artistInfo.forEach(artist => {
+        if (artist.genres && artist.genres.length > 0) {
+          // Use the first genre as the primary genre
+          artistGenreMap.set(artist.artistId, artist.genres[0]);
+        }
+      });
+
+      // Find songs that match these artists
+      let updatedSongsCount = 0;
+
+      // We need to iterate through songs and update them if their artist matches
+      // This is a bit complex because songs have an array of artists
+
+      // Get all songs
+      const allSongs = await db.collection('song_metadata').find({}).toArray();
+
+      const songBulkOps = [];
+
+      for (const song of allSongs) {
+        if (!song.artists || !Array.isArray(song.artists)) continue;
+
+        // Find the first artist that has a genre
+        let genre = null;
+        let allGenres = [];
+
+        for (const artist of song.artists) {
+          if (artist.id && artistGenreMap.has(artist.id)) {
+            const artistGenre = artistGenreMap.get(artist.id);
+            if (!genre) genre = artistGenre;
+            allGenres.push(artistGenre);
+          } else {
+            // Try to look up in DB if not in current batch
+            // (Optimization: load all artist info first? For now, this script usually runs on all artists)
+          }
+        }
+
+        if (genre) {
+          songBulkOps.push({
+            updateOne: {
+              filter: { spotifyUri: song.spotifyUri },
+              update: {
+                $set: {
+                  genre: genre,
+                  allGenres: [...new Set(allGenres)] // Unique genres
+                }
+              }
+            }
+          });
+        }
+      }
+
+      if (songBulkOps.length > 0) {
+        const songResult = await db.collection('song_metadata').bulkWrite(songBulkOps);
+        console.log(`✅ Updated genres for ${songResult.modifiedCount} songs`);
+      } else {
+        console.log(`ℹ️ No songs needed genre updates from this batch`);
       }
     }
 
