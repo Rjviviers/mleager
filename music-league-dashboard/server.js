@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 import dotenv from 'dotenv';
 import { seedDatabase } from './scripts/seed-db.js';
 import {
@@ -9,7 +9,8 @@ import {
     getRoundsByLeague,
     getSubmissionsByRound,
     getVotesByRound,
-    getSongMetadata
+    getSongMetadata,
+    getCollection
 } from './src/utils/mongodb.js';
 
 dotenv.config();
@@ -171,11 +172,17 @@ app.get('/api/votes/:roundId', async (req, res) => {
     }
 });
 
-// Get metadata for a song
-app.get('/api/metadata/:spotifyUri', async (req, res) => {
+// Get metadata for a song by database _id
+app.get('/api/metadata/:id', async (req, res) => {
     try {
-        const spotifyUri = decodeURIComponent(req.params.spotifyUri);
-        const metadata = await getSongMetadata(spotifyUri);
+        const id = req.params.id;
+        // Retrieve metadata document directly by _id
+        const collection = await getCollection('song_metadata');
+        const metadata = await collection.findOne({ _id: new ObjectId(id) });
+        if (!metadata) {
+            return res.status(404).json({ error: 'Metadata not found' });
+        }
+        // Include spotifyUri in response (already part of metadata)
         res.json(metadata);
     } catch (error) {
         console.error('Error fetching metadata:', error);
