@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, ScatterChart, Scatter } from 'recharts';
 
 const COLORS = ['#4EE2B5', '#2EC9FF', '#A178F1', '#E044A7', '#FFE200'];
@@ -6,8 +6,61 @@ const COLORS = ['#4EE2B5', '#2EC9FF', '#A178F1', '#E044A7', '#FFE200'];
 const Analytics = ({ data }) => {
   const [selectedLeague, setSelectedLeague] = useState('league1');
   const [viewType, setViewType] = useState('genre');
+  const [fetchedData, setFetchedData] = useState({}); // { [leagueKey]: { competitors, rounds, submissions, votes } }
+  const [loading, setLoading] = useState(false);
 
-  const leagueData = data?.[selectedLeague];
+  // Load data for the selected league using granular endpoints
+  useEffect(() => {
+    const loadLeagueData = async () => {
+      setLoading(true);
+      try {
+        // Get all leagues to map name to id
+        const leaguesRes = await fetch('/api/leagues');
+        const leagues = await leaguesRes.json();
+        const league = leagues.find(l => l.name.toLowerCase().replace(' ', '') === selectedLeague);
+        if (!league) {
+          console.warn('League not found for', selectedLeague);
+          setLoading(false);
+          return;
+        }
+        const leagueId = league._id;
+        const [competitors, rounds] = await Promise.all([
+          fetch(`/api/competitors/${leagueId}`).then(r => r.json()),
+          fetch(`/api/rounds/${leagueId}`).then(r => r.json())
+        ]);
+        // Fetch submissions and votes for each round
+        const submissionsPromises = rounds.map(r => fetch(`/api/submissions/${r._id}`).then(res => res.json()));
+        const votesPromises = rounds.map(r => fetch(`/api/votes/${r._id}`).then(res => res.json()));
+        const submissionsArrays = await Promise.all(submissionsPromises);
+        const votesArrays = await Promise.all(votesPromises);
+        const submissions = submissionsArrays.flat();
+        const votes = votesArrays.flat();
+        // Enrich submissions with metadata (single call per unique spotifyUri)
+        const allMetadata = new Map();
+        const enrichedSubmissions = await Promise.all(submissions.map(async (sub) => {
+          let metadata = allMetadata.get(sub.spotifyUri);
+          if (!metadata) {
+            const metaRes = await fetch(`/api/metadata/${encodeURIComponent(sub.spotifyUri)}`);
+            metadata = await metaRes.json();
+            if (metadata) allMetadata.set(sub.spotifyUri, metadata);
+          }
+          return { ...sub, metadata: metadata || null };
+        }));
+        const leagueKey = selectedLeague;
+        setFetchedData(prev => ({
+          ...prev,
+          [leagueKey]: { competitors, rounds, submissions: enrichedSubmissions, votes }
+        }));
+      } catch (err) {
+        console.error('Error loading league data', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadLeagueData();
+  }, [selectedLeague]);
+
+  const leagueData = fetchedData[selectedLeague];
 
   // Analyze votes by genre (using real genre data from metadata)
   const genreAnalysis = useMemo(() => {
@@ -119,7 +172,7 @@ const Analytics = ({ data }) => {
     });
   }, [leagueData]);
 
-  if (!data) {
+  if (loading || !leagueData) {
     return (
       <div className="text-center py-12 text-smoke">
         <p>Loading analytics data...</p>

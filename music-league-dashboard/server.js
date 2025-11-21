@@ -111,6 +111,78 @@ app.get('/api/data', async (req, res) => {
     }
 });
 
+// New granular API endpoints
+// Get all leagues
+app.get('/api/leagues', async (req, res) => {
+    try {
+        const leagues = await getLeagues();
+        res.json(leagues);
+    } catch (error) {
+        console.error('Error fetching leagues:', error);
+        res.status(500).json({ error: 'Failed to fetch leagues' });
+    }
+});
+
+// Get competitors for a league
+app.get('/api/competitors/:leagueId', async (req, res) => {
+    try {
+        const leagueId = req.params.leagueId;
+        const competitors = await getCompetitorsByLeague(leagueId);
+        res.json(competitors);
+    } catch (error) {
+        console.error('Error fetching competitors:', error);
+        res.status(500).json({ error: 'Failed to fetch competitors' });
+    }
+});
+
+// Get rounds for a league
+app.get('/api/rounds/:leagueId', async (req, res) => {
+    try {
+        const leagueId = req.params.leagueId;
+        const rounds = await getRoundsByLeague(leagueId);
+        res.json(rounds);
+    } catch (error) {
+        console.error('Error fetching rounds:', error);
+        res.status(500).json({ error: 'Failed to fetch rounds' });
+    }
+});
+
+// Get submissions for a round
+app.get('/api/submissions/:roundId', async (req, res) => {
+    try {
+        const roundId = req.params.roundId;
+        const submissions = await getSubmissionsByRound(roundId);
+        res.json(submissions);
+    } catch (error) {
+        console.error('Error fetching submissions:', error);
+        res.status(500).json({ error: 'Failed to fetch submissions' });
+    }
+});
+
+// Get votes for a round
+app.get('/api/votes/:roundId', async (req, res) => {
+    try {
+        const roundId = req.params.roundId;
+        const votes = await getVotesByRound(roundId);
+        res.json(votes);
+    } catch (error) {
+        console.error('Error fetching votes:', error);
+        res.status(500).json({ error: 'Failed to fetch votes' });
+    }
+});
+
+// Get metadata for a song
+app.get('/api/metadata/:spotifyUri', async (req, res) => {
+    try {
+        const spotifyUri = decodeURIComponent(req.params.spotifyUri);
+        const metadata = await getSongMetadata(spotifyUri);
+        res.json(metadata);
+    } catch (error) {
+        console.error('Error fetching metadata:', error);
+        res.status(500).json({ error: 'Failed to fetch metadata' });
+    }
+});
+
 // Trigger CSV Import
 app.post('/api/import', async (req, res) => {
     try {
