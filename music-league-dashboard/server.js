@@ -180,7 +180,8 @@ app.get('/api/metadata/:id', async (req, res) => {
         const collection = await getCollection('song_metadata');
         const metadata = await collection.findOne({ _id: new ObjectId(id) });
         if (!metadata) {
-            return res.status(404).json({ error: 'Metadata not found' });
+
+            return res.status(404).json({ error: 'Metadata not found' + metadata });
         }
         // Include spotifyUri in response (already part of metadata)
         res.json(metadata);
