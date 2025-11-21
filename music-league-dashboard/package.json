@@ -13,7 +13,9 @@
     "fetch-metadata": "node scripts/fetch-song-metadata.js",
     "export-metadata": "node scripts/export-metadata-csv.js",
     "verify-db": "node scripts/verify-db.js",
-    "examples": "node scripts/example-queries.js"
+    "examples": "node scripts/example-queries.js",
+    "server": "node server.js",
+    "test": "vitest"
   },
   "dependencies": {
     "axios": "^1.13.2",
@@ -27,16 +29,22 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@testing-library/react": "^16.3.0",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.1.0",
     "autoprefixer": "^10.4.22",
+    "cors": "^2.8.5",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
+    "express": "^5.1.0",
     "globals": "^16.5.0",
+    "jsdom": "^27.0.1",
     "postcss": "^8.5.6",
+    "supertest": "^7.1.4",
     "tailwindcss": "^3.4.18",
-    "vite": "^7.2.2"
+    "vite": "^7.2.2",
+    "vitest": "^3.2.4"
   }
 }

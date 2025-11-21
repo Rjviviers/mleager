@@ -1,14 +1,15 @@
-// Script to verify MongoDB setup and data
 import { MongoClient } from 'mongodb';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://admin:admin123@localhost:27017';
-const DB_NAME = 'music_league';
+const DB_NAME = process.env.MONGODB_DB_NAME || 'music_league';
 
 async function verifyDatabase() {
   const client = new MongoClient(MONGODB_URL);
 
   try {
-    console.log('🔍 Verifying MongoDB setup...\n');
     console.log(`Connecting to: ${MONGODB_URL}`);
 
     await client.connect();

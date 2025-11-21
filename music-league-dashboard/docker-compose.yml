@@ -17,18 +17,37 @@ services:
       - music-league-network
     restart: unless-stopped
 
-  music-league-dashboard:
+  backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: music-league-dashboard
+      dockerfile: Dockerfile.backend
+    container_name: music-league-backend
     ports:
-      - "3000:80"
-    restart: unless-stopped
+      - "${PORT:-3001}:3001"
+    environment:
+      PORT: 3001 # Internal port fixed for Nginx
+      MONGODB_URL: mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@${SERVER_IP}:27017
+      MONGODB_DB_NAME: ${MONGO_INITDB_DATABASE}
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
     networks:
       - music-league-network
     depends_on:
       - mongodb
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: music-league-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    networks:
+      - music-league-network
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 networks:
   music-league-network:
@@ -36,4 +55,3 @@ networks:
 
 volumes:
   mongodb_data:
-

@@ -3,9 +3,8 @@
 /**
  * Example queries for working with genre data
  */
-
 import { MongoClient } from 'mongodb';
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -140,7 +139,7 @@ async function runExamples() {
 
     console.log(`Total songs: ${totalSongs}`);
     console.log(`Total artists: ${totalArtists}`);
-    console.log(`Artists with genres: ${artistsWithGenres} (${((artistsWithGenres/totalArtists)*100).toFixed(1)}%)`);
+    console.log(`Artists with genres: ${artistsWithGenres} (${((artistsWithGenres / totalArtists) * 100).toFixed(1)}%)`);
     console.log(`Artists without genres: ${totalArtists - artistsWithGenres}`);
 
     console.log('\n✅ Examples complete!\n');

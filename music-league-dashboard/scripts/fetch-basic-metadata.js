@@ -32,9 +32,6 @@ class SpotifyBasicClient {
   }
 
   async authenticate() {
-    if (this.accessToken && this.tokenExpiresAt && Date.now() < this.tokenExpiresAt) {
-      return this.accessToken;
-    }
 
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;

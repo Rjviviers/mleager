@@ -18,7 +18,6 @@ import { MongoClient } from 'mongodb';
 import { spotifyClient } from '../src/utils/spotify.js';
 import * as dotenv from 'dotenv';
 
-// Load environment variables
 dotenv.config();
 
 const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://admin:admin123@localhost:27017';
@@ -28,7 +27,6 @@ async function fetchSongMetadata() {
   const client = new MongoClient(MONGODB_URL);
 
   try {
-    // Parse command line arguments
     const args = process.argv.slice(2);
     const force = args.includes('--force');
     const limitIndex = args.indexOf('--limit');
@@ -176,4 +174,3 @@ try {
 
 // Run the backfill
 fetchSongMetadata();
-

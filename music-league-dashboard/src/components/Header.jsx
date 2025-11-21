@@ -1,15 +1,16 @@
+import React from 'react';
+import DataSync from './Admin/DataSync';
+
 const Header = () => {
   return (
-    <div className="mb-8">
-      <h1 className="text-display font-semibold text-mist mb-2">
-        Music League Analytics
-      </h1>
-      <p className="text-smoke text-sm">
-        Track submissions, discover duplicates, and analyze voting patterns
-      </p>
+    <div className="flex justify-between items-center mb-8">
+      <div>
+        <h1 className="text-3xl font-bold text-white">Music League Dashboard</h1>
+        <p className="text-smoke mt-2">Track your league stats and analytics</p>
+      </div>
+      <DataSync />
     </div>
   );
 };
 
 export default Header;
-

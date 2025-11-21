@@ -1,15 +1,12 @@
+
 import { MongoClient } from 'mongodb';
 import dotenv from 'dotenv';
 
-// Load environment variables
 dotenv.config();
 
 const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://admin:admin123@localhost:27017';
-const DB_NAME = 'music_league';
+const DB_NAME = process.env.MONGODB_DB_NAME || 'music_league';
 
-/**
- * Seed the genres collection and add genre field to song_metadata
- */
 async function seedGenres() {
   const client = new MongoClient(MONGODB_URL);
 
@@ -167,8 +164,8 @@ async function seedGenres() {
     const totalSongs = await db.collection('song_metadata').countDocuments();
 
     console.log(`   Total Genres: ${genreCount}`);
-    console.log(`   Songs with Genre: ${songsWithGenre}/${totalSongs} (${Math.round(songsWithGenre/totalSongs*100)}%)`);
-    console.log(`   Songs without Genre: ${songsWithoutGenre}/${totalSongs} (${Math.round(songsWithoutGenre/totalSongs*100)}%)`);
+    console.log(`   Songs with Genre: ${songsWithGenre}/${totalSongs} (${Math.round(songsWithGenre / totalSongs * 100)}%)`);
+    console.log(`   Songs without Genre: ${songsWithoutGenre}/${totalSongs} (${Math.round(songsWithoutGenre / totalSongs * 100)}%)`);
 
     // Step 8: Show genre distribution in songs
     console.log('\n📊 Top Genres in Song Metadata:');

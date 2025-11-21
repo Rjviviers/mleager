@@ -1,15 +1,12 @@
+
 import { MongoClient } from 'mongodb';
 import dotenv from 'dotenv';
 
-// Load environment variables
 dotenv.config();
 
 const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://admin:admin123@localhost:27017';
-const DB_NAME = 'music_league';
+const DB_NAME = process.env.MONGODB_DB_NAME || 'music_league';
 
-/**
- * Example queries for genres collection and song genres
- */
 async function queryGenres() {
   const client = new MongoClient(MONGODB_URL);
 
@@ -101,8 +98,8 @@ async function queryGenres() {
     const totalSongs = await db.collection('song_metadata').countDocuments();
     const withGenreCount = totalSongs - noGenreCount;
 
-    console.log(`Songs with genre:    ${withGenreCount}/${totalSongs} (${Math.round(withGenreCount/totalSongs*100)}%)`);
-    console.log(`Songs without genre: ${noGenreCount}/${totalSongs} (${Math.round(noGenreCount/totalSongs*100)}%)`);
+    console.log(`Songs with genre:    ${withGenreCount}/${totalSongs} (${Math.round(withGenreCount / totalSongs * 100)}%)`);
+    console.log(`Songs without genre: ${noGenreCount}/${totalSongs} (${Math.round(noGenreCount / totalSongs * 100)}%)`);
 
     // Show a few examples of songs without genres
     const noGenreSongs = await db.collection('song_metadata')

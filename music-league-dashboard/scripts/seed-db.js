@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 
 // MongoDB connection URL
 const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://admin:admin123@localhost:27017';
-const DB_NAME = 'music_league';
+const DB_NAME = process.env.MONGODB_DB_NAME || 'music_league';
 
 // Data directories
 const LEAGUE_DIRS = [
@@ -240,6 +240,10 @@ async function seedDatabase() {
   }
 }
 
-// Run the seeder
-seedDatabase();
+// Run the seeder if called directly
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  seedDatabase();
+}
+
+export { seedDatabase };
 

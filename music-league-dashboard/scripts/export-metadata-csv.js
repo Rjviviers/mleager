@@ -103,7 +103,7 @@ async function exportMetadataToCSV() {
     console.log(`Average Valence: ${avgValence}`);
 
     const withGenre = metadata.filter(m => m.genre).length;
-    console.log(`Songs with Genre: ${withGenre}/${metadata.length} (${Math.round(withGenre/metadata.length*100)}%)`);
+    console.log(`Songs with Genre: ${withGenre}/${metadata.length} (${Math.round(withGenre / metadata.length * 100)}%)`);
 
     console.log('\n✅ Export complete!');
 

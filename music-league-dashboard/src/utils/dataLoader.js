@@ -16,76 +16,18 @@ export const loadCSV = async (filePath) => {
 
 export const loadAllData = async () => {
   try {
-    const [
-      league1Submissions,
-      league1Votes,
-      league1Rounds,
-      league1Competitors,
-      league2Submissions,
-      league2Votes,
-      league2Rounds,
-      league2Competitors,
-      metadata,
-    ] = await Promise.all([
-      loadCSV('/data/league-1-Data/submissions.csv'),
-      loadCSV('/data/league-1-Data/votes.csv'),
-      loadCSV('/data/league-1-Data/rounds.csv'),
-      loadCSV('/data/league-1-Data/competitors.csv'),
-      loadCSV('/data/league-2-Data/submissions.csv'),
-      loadCSV('/data/league-2-Data/votes.csv'),
-      loadCSV('/data/league-2-Data/rounds.csv'),
-      loadCSV('/data/league-2-Data/competitors.csv'),
-      loadCSV('/data/song_metadata.csv').catch(() => {
-        console.warn('⚠️  Song metadata not found. Run "npm run fetch-metadata && npm run export-metadata" to generate it.');
-        return [];
-      }),
-    ]);
+    const response = await fetch('/api/data');
+    if (!response.ok) {
+      throw new Error(`Failed to fetch data: ${response.statusText}`);
+    }
+    const data = await response.json();
 
-    // Create a metadata lookup map
-    const metadataMap = new Map();
-    metadata.forEach(m => {
-      metadataMap.set(m['Spotify URI'], {
-        energy: parseFloat(m.Energy),
-        danceability: parseFloat(m.Danceability),
-        valence: parseFloat(m.Valence),
-        acousticness: parseFloat(m.Acousticness),
-        instrumentalness: parseFloat(m.Instrumentalness),
-        liveness: parseFloat(m.Liveness),
-        speechiness: parseFloat(m.Speechiness),
-        tempo: parseFloat(m.Tempo),
-        key: parseInt(m.Key),
-        mode: parseInt(m.Mode),
-        time_signature: parseInt(m['Time Signature']),
-        loudness: parseFloat(m.Loudness),
-        duration_ms: parseInt(m['Duration (ms)']),
-        genre: m.Genre || null,  // Include genre from metadata CSV
-        allGenres: m['All Genres'] ? m['All Genres'].split(';').map(g => g.trim()).filter(g => g) : [],
-      });
-    });
+    // Convert metadata object back to Map for compatibility with existing components
+    if (data.metadata) {
+      data.metadata = new Map(Object.entries(data.metadata));
+    }
 
-    // Join metadata with submissions
-    const enrichSubmissions = (submissions) => {
-      return submissions.map(submission => ({
-        ...submission,
-        metadata: metadataMap.get(submission['Spotify URI']) || null,
-      }));
-    };
-
-    return {
-      league1: {
-        submissions: enrichSubmissions(league1Submissions),
-        votes: league1Votes,
-        rounds: league1Rounds,
-        competitors: league1Competitors,
-      },
-      league2: {
-        submissions: enrichSubmissions(league2Submissions),
-        votes: league2Votes,
-        rounds: league2Rounds,
-        competitors: league2Competitors,
-      },
-      metadata: metadataMap,
-    };
+    return data;
   } catch (error) {
     console.error('Error loading data:', error);
     throw error;

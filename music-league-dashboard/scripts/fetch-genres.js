@@ -29,9 +29,6 @@ class SpotifyGenreClient {
   }
 
   async authenticate() {
-    if (this.accessToken && this.tokenExpiresAt && Date.now() < this.tokenExpiresAt) {
-      return this.accessToken;
-    }
 
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -284,7 +281,7 @@ async function showGenreStats(db) {
   const artistsWithoutGenres = totalArtists - artistsWithGenres;
 
   console.log(`Total artists in DB: ${totalArtists}`);
-  console.log(`Artists with genres: ${artistsWithGenres} (${((artistsWithGenres/totalArtists)*100).toFixed(1)}%)`);
+  console.log(`Artists with genres: ${artistsWithGenres} (${((artistsWithGenres / totalArtists) * 100).toFixed(1)}%)`);
   console.log(`Artists without genres: ${artistsWithoutGenres}`);
 
   // Get top genres

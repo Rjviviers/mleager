@@ -3,8 +3,8 @@
 
 import { MongoClient } from 'mongodb';
 
-const MONGODB_URL = 'mongodb://admin:admin123@localhost:27017';
-const DB_NAME = 'music_league';
+const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://admin:admin123@localhost:27017';
+const DB_NAME = process.env.MONGODB_DB_NAME || 'music_league';
 
 async function runExamples() {
   const client = new MongoClient(MONGODB_URL);
