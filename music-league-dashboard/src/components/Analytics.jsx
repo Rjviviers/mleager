@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, ScatterChart, Scatter } from 'recharts';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, ScatterChart, Scatter } from 'recharts';
 
 const COLORS = ['#4EE2B5', '#2EC9FF', '#A178F1', '#E044A7', '#FFE200'];
 
@@ -139,8 +138,8 @@ const Analytics = ({ data }) => {
               <button
                 onClick={() => setSelectedLeague('league1')}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeague === 'league1'
-                    ? 'bg-mint text-charcoal'
-                    : 'bg-charcoal text-smoke hover:text-mist'
+                  ? 'bg-mint text-charcoal'
+                  : 'bg-charcoal text-smoke hover:text-mist'
                   }`}
               >
                 League 1
@@ -148,8 +147,8 @@ const Analytics = ({ data }) => {
               <button
                 onClick={() => setSelectedLeague('league2')}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeague === 'league2'
-                    ? 'bg-mint text-charcoal'
-                    : 'bg-charcoal text-smoke hover:text-mist'
+                  ? 'bg-mint text-charcoal'
+                  : 'bg-charcoal text-smoke hover:text-mist'
                   }`}
               >
                 League 2
@@ -165,8 +164,8 @@ const Analytics = ({ data }) => {
                   key={type}
                   onClick={() => setViewType(type)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all capitalize ${viewType === type
-                      ? 'bg-lavender text-white'
-                      : 'bg-charcoal text-smoke hover:text-mist'
+                    ? 'bg-lavender text-white'
+                    : 'bg-charcoal text-smoke hover:text-mist'
                     }`}
                 >
                   {type}
