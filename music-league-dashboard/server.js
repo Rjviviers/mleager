@@ -116,7 +116,9 @@ app.get('/api/data', async (req, res) => {
 // Get all leagues
 app.get('/api/leagues', async (req, res) => {
     try {
+        console.log('Fetching all leagues');
         const leagues = await getLeagues();
+        console.log(`Retrieved ${leagues.length} leagues`);
         res.json(leagues);
     } catch (error) {
         console.error('Error fetching leagues:', error);
@@ -128,7 +130,9 @@ app.get('/api/leagues', async (req, res) => {
 app.get('/api/competitors/:leagueId', async (req, res) => {
     try {
         const leagueId = req.params.leagueId;
+        console.log(`Fetching competitors for leagueId: ${leagueId}`);
         const competitors = await getCompetitorsByLeague(leagueId);
+        console.log(`Retrieved ${competitors.length} competitors`);
         res.json(competitors);
     } catch (error) {
         console.error('Error fetching competitors:', error);
@@ -140,7 +144,9 @@ app.get('/api/competitors/:leagueId', async (req, res) => {
 app.get('/api/rounds/:leagueId', async (req, res) => {
     try {
         const leagueId = req.params.leagueId;
+        console.log(`Fetching rounds for leagueId: ${leagueId}`);
         const rounds = await getRoundsByLeague(leagueId);
+        console.log(`Retrieved ${rounds.length} rounds`);
         res.json(rounds);
     } catch (error) {
         console.error('Error fetching rounds:', error);
@@ -152,8 +158,22 @@ app.get('/api/rounds/:leagueId', async (req, res) => {
 app.get('/api/submissions/:roundId', async (req, res) => {
     try {
         const roundId = req.params.roundId;
+        console.log('Fetching submissions for roundId:', roundId);
         const submissions = await getSubmissionsByRound(roundId);
-        res.json(submissions);
+        console.log(`Retrieved ${submissions.length} submissions`);
+        // Enrich each submission with metadataId (MongoDB _id of song metadata)
+        const enriched = await Promise.all(submissions.map(async (sub) => {
+            const metadata = await getSongMetadata(sub.spotifyUri);
+            const metaId = metadata ? metadata._id : null;
+            if (metaId) {
+                console.log(`Enriched submission ${sub._id} with metadataId ${metaId}`);
+            } else {
+                console.warn(`No metadata found for submission ${sub._id} (spotifyUri: ${sub.spotifyUri})`);
+            }
+            return { ...sub, metadataId: metaId };
+        }));
+        console.log(`Returning ${enriched.length} enriched submissions`);
+        res.json(enriched);
     } catch (error) {
         console.error('Error fetching submissions:', error);
         res.status(500).json({ error: 'Failed to fetch submissions' });
@@ -164,30 +184,13 @@ app.get('/api/submissions/:roundId', async (req, res) => {
 app.get('/api/votes/:roundId', async (req, res) => {
     try {
         const roundId = req.params.roundId;
+        console.log(`Fetching votes for roundId: ${roundId}`);
         const votes = await getVotesByRound(roundId);
+        console.log(`Retrieved ${votes.length} votes`);
         res.json(votes);
     } catch (error) {
         console.error('Error fetching votes:', error);
         res.status(500).json({ error: 'Failed to fetch votes' });
-    }
-});
-
-// Get metadata for a song by database _id
-app.get('/api/metadata/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        // Retrieve metadata document directly by _id
-        const collection = await getCollection('song_metadata');
-        const metadata = await collection.findOne({ _id: new ObjectId(id) });
-        if (!metadata) {
-
-            return res.status(404).json({ error: 'Metadata not found' + metadata });
-        }
-        // Include spotifyUri in response (already part of metadata)
-        res.json(metadata);
-    } catch (error) {
-        console.error('Error fetching metadata:', error);
-        res.status(500).json({ error: 'Failed to fetch metadata' });
     }
 });
 

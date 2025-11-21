@@ -40,7 +40,7 @@ const Analytics = ({ data }) => {
         const enrichedSubmissions = await Promise.all(submissions.map(async (sub) => {
           let metadata = allMetadata.get(sub.spotifyUri);
           if (!metadata) {
-            const metaRes = await fetch(`/api/metadata/${sub._id}`);
+            const metaRes = await fetch(`/api/metadata/${sub.metadataId}`);
             metadata = await metaRes.json();
             if (metadata) allMetadata.set(sub.spotifyUri, metadata);
           }
