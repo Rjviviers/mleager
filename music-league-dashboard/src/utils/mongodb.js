@@ -7,7 +7,7 @@ import { Submission } from '../models/Submission.js';
 import { Vote } from '../models/Vote.js';
 import { SongMetadata } from '../models/SongMetadata.js';
 
-const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://admin:admin123@localhost:27017';
+const MONGODB_URL = process.env.MONGODB_URL;
 const DB_NAME = process.env.MONGODB_DB_NAME || 'music_league';
 
 export async function connectToDatabase() {
@@ -16,7 +16,7 @@ export async function connectToDatabase() {
   }
 
   try {
-    console.log('MONGODB_URL:', MONGODB_URL);
+    console.log('MONGODB_URL:', process.env.MONGODB_URL);
     const connectionString = MONGODB_URL.includes('?')
       ? `${MONGODB_URL}/${DB_NAME}&authSource=admin`
       : `${MONGODB_URL}/${DB_NAME}?authSource=admin`;
