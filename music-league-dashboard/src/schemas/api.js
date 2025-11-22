@@ -28,7 +28,7 @@ export const RoundSchema = z.object({
 });
 
 export const SubmissionSchema = z.object({
-    _id: z.string(),
+    _id: z.any(), // Handle ObjectId
     roundId: z.string(),
     spotifyUri: z.string(),
     submitterId: z.string(),
@@ -41,7 +41,7 @@ export const SubmissionSchema = z.object({
 });
 
 export const VoteSchema = z.object({
-    _id: z.string().optional(),
+    _id: z.any().optional(), // Handle ObjectId
     roundId: z.string(),
     voterId: z.string(),
     spotifyUri: z.string(),
@@ -51,11 +51,11 @@ export const VoteSchema = z.object({
 
 export const SongMetadataSchema = z.object({
     spotifyUri: z.string(),
-    title: z.string(),
-    artist: z.string().optional(),
-    album: z.string().optional(),
+    name: z.string(),
+    artists: z.array(z.any()).optional(), // Array of objects
+    album: z.any().optional(), // Object
     albumArt: z.string().optional(),
-    previewUrl: z.string().nullable().optional(),
+    preview_url: z.string().nullable().optional(),
     popularity: z.number().optional(),
     duration_ms: z.number().optional(),
     explicit: z.boolean().optional(),
@@ -66,6 +66,7 @@ export const SongMetadataSchema = z.object({
     acousticness: z.number().optional(),
     tempo: z.number().optional(),
     loudness: z.number().optional(),
+    spotify_url: z.string().optional(),
 });
 
 // API Response Schemas

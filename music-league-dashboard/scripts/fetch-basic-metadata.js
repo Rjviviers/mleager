@@ -13,9 +13,11 @@
  * Audio features (energy, danceability, etc.) require Extended Quota Mode
  */
 
-import { MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
+import { SongMetadata } from '../src/models/SongMetadata.js';
+import { Submission } from '../src/models/Submission.js';
 
 dotenv.config();
 
@@ -161,8 +163,26 @@ class SpotifyBasicClient {
   }
 }
 
+async function connectToDatabase() {
+  let connectionString = MONGODB_URL;
+  if (!connectionString.endsWith('/')) {
+    connectionString += '/';
+  }
+  if (!connectionString.includes(DB_NAME)) {
+    connectionString += DB_NAME;
+  }
+
+  if (!connectionString.includes('authSource')) {
+    const separator = connectionString.includes('?') ? '&' : '?';
+    connectionString += `${separator}authSource=admin`;
+  }
+
+  console.log('Connecting to MongoDB...');
+  await mongoose.connect(connectionString);
+  console.log('✅ Connected to MongoDB\n');
+}
+
 async function fetchBasicMetadata() {
-  const client = new MongoClient(MONGODB_URL);
   const spotifyClient = new SpotifyBasicClient();
 
   try {
@@ -183,26 +203,17 @@ async function fetchBasicMetadata() {
     }
 
     // Connect to MongoDB
-    console.log('Connecting to MongoDB...');
-    await client.connect();
-    console.log('✅ Connected to MongoDB\n');
-
-    const db = client.db(DB_NAME);
+    await connectToDatabase();
 
     // Get all unique Spotify URIs from submissions
     console.log('📊 Analyzing submissions...');
-    const allSubmissions = await db.collection('submissions').find({}).toArray();
-    const uniqueSpotifyUris = [...new Set(allSubmissions.map(s => s.spotifyUri))];
+    const uniqueSpotifyUris = await Submission.distinct('spotifyUri');
     console.log(`Found ${uniqueSpotifyUris.length} unique songs\n`);
 
     // Filter out songs that already have metadata (unless force mode)
     let songsToFetch = uniqueSpotifyUris;
     if (!force) {
-      const existingMetadata = await db.collection('song_metadata')
-        .find({ spotifyUri: { $in: uniqueSpotifyUris } })
-        .project({ spotifyUri: 1 })
-        .toArray();
-
+      const existingMetadata = await SongMetadata.find({ spotifyUri: { $in: uniqueSpotifyUris } }).select('spotifyUri');
       const existingUris = new Set(existingMetadata.map(m => m.spotifyUri));
       songsToFetch = uniqueSpotifyUris.filter(uri => !existingUris.has(uri));
 
@@ -245,12 +256,27 @@ async function fetchBasicMetadata() {
           }
         }));
 
-        const result = await db.collection('song_metadata').bulkWrite(bulkOps);
+        const result = await SongMetadata.bulkWrite(bulkOps);
         console.log(`✅ Upserted ${result.upsertedCount + result.modifiedCount} records`);
       } else {
         // Use insertMany for new records
-        await db.collection('song_metadata').insertMany(trackInfo);
-        console.log(`✅ Inserted ${trackInfo.length} new records`);
+        // Note: insertMany might fail on duplicates if not handled, but we filtered them out unless force is on.
+        // If force is on, we used bulkWrite.
+        // If force is off, we filtered out existing.
+        // However, there might be duplicates within the batch if the input had duplicates (distinct handled that).
+        // Or if race condition.
+        // Let's use bulkWrite with upsert even for non-force to be safe? 
+        // Or just insertMany with ordered: false.
+        try {
+          await SongMetadata.insertMany(trackInfo, { ordered: false });
+          console.log(`✅ Inserted ${trackInfo.length} new records`);
+        } catch (e) {
+          if (e.code === 11000) {
+            console.log(`✅ Inserted some records (some duplicates skipped)`);
+          } else {
+            throw e;
+          }
+        }
       }
     }
 
@@ -261,7 +287,7 @@ async function fetchBasicMetadata() {
     console.log(`✅ Successful: ${successCount}`);
     console.log(`❌ Failed: ${failureCount}`);
 
-    const totalInDb = await db.collection('song_metadata').countDocuments();
+    const totalInDb = await SongMetadata.countDocuments();
     console.log(`\nTotal metadata records in DB: ${totalInDb}`);
 
     const coverage = ((totalInDb / uniqueSpotifyUris.length) * 100).toFixed(1);
@@ -279,10 +305,9 @@ async function fetchBasicMetadata() {
     console.error('\n❌ Error during metadata fetch:', error);
     process.exit(1);
   } finally {
-    await client.close();
+    await mongoose.disconnect();
     console.log('\nMongoDB connection closed');
   }
 }
 
 fetchBasicMetadata();
-

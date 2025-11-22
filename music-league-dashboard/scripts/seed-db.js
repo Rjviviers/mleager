@@ -1,10 +1,16 @@
-import { MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Papa from 'papaparse';
 import dotenv from 'dotenv';
 import { spotifyClient } from '../src/utils/spotify.js';
+import { League } from '../src/models/League.js';
+import { Competitor } from '../src/models/Competitor.js';
+import { Round } from '../src/models/Round.js';
+import { Submission } from '../src/models/Submission.js';
+import { Vote } from '../src/models/Vote.js';
+import { SongMetadata } from '../src/models/SongMetadata.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -34,31 +40,49 @@ async function readCSV(filePath) {
   });
 }
 
+async function connectToDatabase() {
+  let connectionString = MONGODB_URL;
+  if (!connectionString.endsWith('/')) {
+    connectionString += '/';
+  }
+  // If DB_NAME is not in the URL, append it
+  if (!connectionString.includes(DB_NAME)) {
+    connectionString += DB_NAME;
+  }
+
+  if (!connectionString.includes('authSource')) {
+    const separator = connectionString.includes('?') ? '&' : '?';
+    connectionString += `${separator}authSource=admin`;
+  }
+
+  console.log('Connecting to MongoDB...');
+  await mongoose.connect(connectionString);
+  console.log('Connected successfully to MongoDB');
+}
+
 async function seedDatabase() {
-  const client = new MongoClient(MONGODB_URL);
-
   try {
-    console.log('Connecting to MongoDB...');
-    await client.connect();
-    console.log('Connected successfully to MongoDB');
-
-    const db = client.db(DB_NAME);
+    await connectToDatabase();
 
     // Clear existing collections
     console.log('\nClearing existing collections...');
-    const collections = ['competitors', 'rounds', 'submissions', 'votes', 'leagues', 'song_metadata', 'genres'];
-    for (const collectionName of collections) {
-      try {
-        await db.collection(collectionName).drop();
-        console.log(`Dropped collection: ${collectionName}`);
-      } catch (error) {
-        if (error.code === 26) {
-          console.log(`Collection ${collectionName} doesn't exist, skipping...`);
-        } else {
-          throw error;
-        }
+    await League.deleteMany({});
+    await Competitor.deleteMany({});
+    await Round.deleteMany({});
+    await Submission.deleteMany({});
+    await Vote.deleteMany({});
+    await SongMetadata.deleteMany({});
+
+    try {
+      if (mongoose.connection.db) {
+        await mongoose.connection.db.collection('genres').drop();
+        console.log('Dropped collection: genres');
       }
+    } catch (e) {
+      if (e.code !== 26) console.log('Error dropping genres (might not exist):', e.message);
     }
+
+    console.log('Collections cleared.');
 
     // Seed data for each league
     for (let leagueIndex = 0; leagueIndex < LEAGUE_DIRS.length; leagueIndex++) {
@@ -69,10 +93,9 @@ async function seedDatabase() {
 
       // Create league document
       const leagueName = leagueDir.includes('league-1') ? 'League 1' : 'League 2';
-      await db.collection('leagues').insertOne({
+      await League.create({
         _id: leagueId,
         name: leagueName,
-        createdAt: new Date()
       });
       console.log(`Created league: ${leagueName}`);
 
@@ -85,24 +108,24 @@ async function seedDatabase() {
 
         for (const comp of competitors) {
           try {
-            // Try to insert the competitor
-            await db.collection('competitors').insertOne({
-              _id: comp.ID,
-              name: comp.Name,
-              leagues: [leagueId]
-            });
-            insertedCount++;
-          } catch (error) {
-            if (error.code === 11000) {
-              // Competitor already exists, add this league to their leagues array
-              await db.collection('competitors').updateOne(
-                { _id: comp.ID },
-                { $addToSet: { leagues: leagueId } }
-              );
-              updatedCount++;
+            // Try to find existing competitor
+            const existing = await Competitor.findById(comp.ID);
+            if (existing) {
+              if (!existing.leagues.includes(leagueId)) {
+                existing.leagues.push(leagueId);
+                await existing.save();
+                updatedCount++;
+              }
             } else {
-              throw error;
+              await Competitor.create({
+                _id: comp.ID,
+                name: comp.Name,
+                leagues: [leagueId]
+              });
+              insertedCount++;
             }
+          } catch (error) {
+            console.error(`Error processing competitor ${comp.Name}:`, error);
           }
         }
         console.log(`Competitors: ${insertedCount} new, ${updatedCount} updated`);
@@ -117,11 +140,12 @@ async function seedDatabase() {
           name: round.Name,
           description: round.Description,
           playlistUrl: round['Playlist URL'],
-          created: new Date(round.Created),
+          startDate: round.Created ? new Date(round.Created) : undefined,
           leagueId: leagueId
         }));
+
         if (roundsWithLeague.length > 0) {
-          await db.collection('rounds').insertMany(roundsWithLeague);
+          await Round.insertMany(roundsWithLeague);
           console.log(`Inserted ${roundsWithLeague.length} rounds`);
         }
       }
@@ -134,16 +158,14 @@ async function seedDatabase() {
           spotifyUri: submission['Spotify URI'],
           title: submission.Title,
           album: submission.Album,
-          artists: submission['Artist(s)'],
+          artists: submission['Artist(s)'] ? [submission['Artist(s)']] : [],
           submitterId: submission['Submitter ID'],
-          created: new Date(submission.Created),
           comment: submission.Comment,
           roundId: submission['Round ID'],
-          visibleToVoters: submission['Visible To Voters'],
           leagueId: leagueId
         }));
         if (submissionsWithLeague.length > 0) {
-          await db.collection('submissions').insertMany(submissionsWithLeague);
+          await Submission.insertMany(submissionsWithLeague);
           console.log(`Inserted ${submissionsWithLeague.length} submissions`);
         }
       }
@@ -155,47 +177,26 @@ async function seedDatabase() {
         const votesWithLeague = votes.map(vote => ({
           spotifyUri: vote['Spotify URI'],
           voterId: vote['Voter ID'],
-          created: new Date(vote.Created),
           pointsAssigned: parseInt(vote['Points Assigned']) || 0,
           comment: vote.Comment,
           roundId: vote['Round ID'],
           leagueId: leagueId
         }));
         if (votesWithLeague.length > 0) {
-          await db.collection('votes').insertMany(votesWithLeague);
+          await Vote.insertMany(votesWithLeague);
           console.log(`Inserted ${votesWithLeague.length} votes`);
         }
       }
     }
-
-    // Create indexes for better query performance
-    console.log('\nCreating indexes...');
-    await db.collection('competitors').createIndex({ leagues: 1 });
-    await db.collection('competitors').createIndex({ name: 1 });
-    await db.collection('rounds').createIndex({ leagueId: 1 });
-    await db.collection('submissions').createIndex({ leagueId: 1, roundId: 1 });
-    await db.collection('submissions').createIndex({ submitterId: 1 });
-    await db.collection('submissions').createIndex({ spotifyUri: 1 });
-    await db.collection('votes').createIndex({ leagueId: 1, roundId: 1 });
-    await db.collection('votes').createIndex({ voterId: 1 });
-    await db.collection('votes').createIndex({ spotifyUri: 1 });
-    await db.collection('song_metadata').createIndex({ spotifyUri: 1 }, { unique: true });
-    await db.collection('song_metadata').createIndex({ genre: 1 });
-    await db.collection('genres').createIndex({ name: 1 }, { unique: true });
-    console.log('Indexes created successfully');
 
     // Fetch and store song metadata from Spotify
     const skipMetadata = process.argv.includes('--skip-metadata');
     if (!skipMetadata) {
       console.log('\n--- Fetching Song Metadata from Spotify ---');
       try {
-        // Get all unique Spotify URIs from submissions
-        const allSubmissions = await db.collection('submissions').find({}).toArray();
-        const uniqueSpotifyUris = [...new Set(allSubmissions.map(s => s.spotifyUri))];
-
+        const uniqueSpotifyUris = await Submission.distinct('spotifyUri');
         console.log(`Found ${uniqueSpotifyUris.length} unique songs to fetch metadata for`);
 
-        // Fetch audio features from Spotify
         const audioFeatures = await spotifyClient.getAllAudioFeatures(
           uniqueSpotifyUris,
           (progress) => {
@@ -203,9 +204,8 @@ async function seedDatabase() {
           }
         );
 
-        // Insert metadata into database
         if (audioFeatures.length > 0) {
-          await db.collection('song_metadata').insertMany(audioFeatures);
+          await SongMetadata.insertMany(audioFeatures);
           console.log(`✅ Inserted ${audioFeatures.length} song metadata records`);
         } else {
           console.log('⚠️  No audio features were fetched');
@@ -220,13 +220,12 @@ async function seedDatabase() {
 
     // Print summary
     console.log('\n=== Database Seeding Summary ===');
-    console.log(`Leagues: ${await db.collection('leagues').countDocuments()}`);
-    console.log(`Competitors: ${await db.collection('competitors').countDocuments()}`);
-    console.log(`Rounds: ${await db.collection('rounds').countDocuments()}`);
-    console.log(`Submissions: ${await db.collection('submissions').countDocuments()}`);
-    console.log(`Votes: ${await db.collection('votes').countDocuments()}`);
-    console.log(`Song Metadata: ${await db.collection('song_metadata').countDocuments()}`);
-    console.log(`Genres: ${await db.collection('genres').countDocuments()}`);
+    console.log(`Leagues: ${await League.countDocuments()}`);
+    console.log(`Competitors: ${await Competitor.countDocuments()}`);
+    console.log(`Rounds: ${await Round.countDocuments()}`);
+    console.log(`Submissions: ${await Submission.countDocuments()}`);
+    console.log(`Votes: ${await Vote.countDocuments()}`);
+    console.log(`Song Metadata: ${await SongMetadata.countDocuments()}`);
     console.log('\n✅ Database seeded successfully!');
     console.log('\n💡 To populate genres and add genre field to songs, run:');
     console.log('   node scripts/seed-genres.js');
@@ -235,7 +234,7 @@ async function seedDatabase() {
     console.error('Error seeding database:', error);
     process.exit(1);
   } finally {
-    await client.close();
+    await mongoose.disconnect();
     console.log('\nMongoDB connection closed');
   }
 }
@@ -246,4 +245,3 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 
 export { seedDatabase };
-
