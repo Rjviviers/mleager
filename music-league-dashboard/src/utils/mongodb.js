@@ -16,12 +16,13 @@ export async function connectToDatabase() {
   }
 
   try {
+    console.log('MONGODB_URL:', MONGODB_URL);
     const connectionString = MONGODB_URL.includes('?')
       ? `${MONGODB_URL}/${DB_NAME}&authSource=admin`
       : `${MONGODB_URL}/${DB_NAME}?authSource=admin`;
 
     await mongoose.connect(connectionString);
-    console.log('Connected to MongoDB via Mongoose');
+
     return mongoose.connection;
   } catch (error) {
     console.error('MongoDB connection error:', error);
