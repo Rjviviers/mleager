@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
 const submissionSchema = new mongoose.Schema({
-    _id: { type: String, required: true },
     roundId: { type: String, ref: 'Round', required: true },
     leagueId: { type: Number, ref: 'League' }, // Added based on usage
     spotifyUri: { type: String, required: true },

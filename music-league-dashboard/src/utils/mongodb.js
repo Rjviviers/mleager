@@ -17,7 +17,17 @@ export async function connectToDatabase() {
 
   try {
     console.log('MONGODB_URL:', process.env.MONGODB_URL);
-    const connectionString = process.env.MONGODB_URL + '/' + DB_NAME;
+
+    let connectionString = process.env.MONGODB_URL;
+    if (!connectionString.endsWith('/')) {
+      connectionString += '/';
+    }
+    connectionString += DB_NAME;
+
+    if (!connectionString.includes('authSource')) {
+      const separator = connectionString.includes('?') ? '&' : '?';
+      connectionString += `${separator}authSource=admin`;
+    }
 
     await mongoose.connect(connectionString);
 

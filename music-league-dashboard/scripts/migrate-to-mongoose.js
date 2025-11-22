@@ -65,15 +65,28 @@ async function migrate() {
         // Submissions
         console.log('Migrating Submissions...');
         const submissions = await Submission.find({});
+        let subSuccess = 0;
+        let subFail = 0;
         for (const sub of submissions) {
-            const error = sub.validateSync();
-            if (error) {
-                console.error(`Validation error for Submission ${sub._id}:`, error.message);
-            } else {
-                await sub.save();
+            try {
+                // Explicitly mark artists as modified if it was cast from string
+                // Mongoose might not detect the type change automatically if the value 'looks' the same
+                sub.markModified('artists');
+
+                const error = sub.validateSync();
+                if (error) {
+                    console.error(`Validation error for Submission ${sub._id}:`, error.message);
+                    subFail++;
+                } else {
+                    await sub.save();
+                    subSuccess++;
+                }
+            } catch (err) {
+                console.error(`Save error for Submission ${sub._id}:`, err.message);
+                subFail++;
             }
         }
-        console.log(`Processed ${submissions.length} submissions.`);
+        console.log(`Processed ${submissions.length} submissions. Success: ${subSuccess}, Failed: ${subFail}`);
 
         // Votes
         console.log('Migrating Votes...');

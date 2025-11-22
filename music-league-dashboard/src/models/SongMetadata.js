@@ -2,11 +2,11 @@ import mongoose from 'mongoose';
 
 const songMetadataSchema = new mongoose.Schema({
     spotifyUri: { type: String, required: true, unique: true },
-    title: { type: String, required: true },
-    artist: { type: String }, // Or array of strings
-    album: { type: String },
-    albumArt: { type: String },
-    previewUrl: { type: String },
+    name: { type: String, required: true }, // Was title
+    artists: { type: mongoose.Schema.Types.Mixed }, // Was artist (String). Data has artists (Array/Object)
+    album: { type: mongoose.Schema.Types.Mixed }, // Was String. Data has Object
+    albumArt: { type: String }, // Might be inside album object?
+    preview_url: { type: String }, // Was previewUrl
     popularity: { type: Number },
     duration_ms: { type: Number },
     explicit: { type: Boolean },
@@ -17,6 +17,9 @@ const songMetadataSchema = new mongoose.Schema({
     acousticness: { type: Number },
     tempo: { type: Number },
     loudness: { type: Number },
+    spotify_url: { type: String },
+    fetchedAt: { type: Date },
+    lastUpdated: { type: Date }
 }, { timestamps: true });
 
 export const SongMetadata = mongoose.model('SongMetadata', songMetadataSchema, 'song_metadata'); // Explicit collection name
