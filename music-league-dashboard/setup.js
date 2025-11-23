@@ -101,6 +101,15 @@ async function main() {
         // Don't exit, maybe partial success is ok
     }
 
+    // 6. Run Song Population
+    console.log('\n📊 Populating Song Collection...');
+    try {
+        runCommand('node', ['scripts/populate-songs.js']);
+    } catch (e) {
+        console.error('❌ Song population failed.');
+        // Don't exit, maybe partial success is ok
+    }
+
     console.log('\n✅ Setup Complete!');
     console.log('   Backend running on port specified in .env (default 3003)');
     console.log('   Frontend running on port specified in .env (default 3002)');
