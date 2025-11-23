@@ -26,6 +26,18 @@ async function populateSongs() {
     console.log('🚀 Starting Song population...');
 
     try {
+        // Debug: Check if any submissions exist
+        const count = await Submission.countDocuments();
+        console.log(`Total submissions in DB: ${count}`);
+
+        if (count === 0) {
+            console.log('⚠️ No submissions found. Skipping population.');
+            return;
+        }
+
+        const sample = await Submission.findOne();
+        console.log('Sample submission:', JSON.stringify(sample, null, 2));
+
         // 1. Aggregate Submissions to count occurrences of each spotifyUri
         const submissionCounts = await Submission.aggregate([
             {
