@@ -73,7 +73,7 @@ async function main() {
     // 2. Start Docker
     console.log('\n🐳 Starting Docker Containers...');
     try {
-        runCommand('docker-compose', ['up', '-d']);
+        runCommand('docker compose', ['up', '-d']);
         console.log('✅ Docker containers started.');
     } catch (error) {
         console.error('❌ Failed to start Docker. Make sure Docker is running.');
