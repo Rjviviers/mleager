@@ -101,6 +101,22 @@ async function main() {
         // Don't exit, maybe partial success is ok
     }
 
+    // 6. Run Genre Fetch
+    console.log('\n🎸 Running Genre Fetch...');
+    try {
+        runCommand('node', ['scripts/fetch-genres.js']);
+    } catch (e) {
+        console.error('❌ Genre fetch failed.');
+    }
+
+    // 7. Run Genre Seeding
+    console.log('\n🌱 Running Genre Seeding...');
+    try {
+        runCommand('node', ['scripts/seed-genres.js']);
+    } catch (e) {
+        console.error('❌ Genre seeding failed.');
+    }
+
     // 6. Run Song Population
     console.log('\n📊 Populating Song Collection...');
     try {

@@ -7,49 +7,16 @@ const SongsTable = ({ data }) => {
   const [sortDirection, setSortDirection] = useState('desc');
   const [expandedRow, setExpandedRow] = useState(null);
 
-  // Combine all submissions with their metadata, genres, and votes
+  // Data is now a flat array of songs
   const songsData = useMemo(() => {
-    if (!data) return [];
-
-    const league1Songs = data.league1?.submissions || [];
-    const league2Songs = data.league2?.submissions || [];
-
-    const allSongs = [
-      ...league1Songs.map(s => ({ ...s, league: 'League 1', leagueData: data.league1 })),
-      ...league2Songs.map(s => ({ ...s, league: 'League 2', leagueData: data.league2 })),
-    ];
-
-    return allSongs.map(song => {
-      const spotifyUri = song['Spotify URI'];
-
-      // Calculate total votes for this song
-      const votes = song.leagueData.votes.filter(v => v['Spotify URI'] === spotifyUri);
-      const totalVotes = votes.reduce((sum, v) => sum + parseInt(v['Points Assigned'] || 0), 0);
-      const voteCount = votes.length;
-
-      // Get metadata
-      const metadata = song.metadata || {};
-
-      return {
-        title: song.Title,
-        artist: song['Artist(s)'],
-        album: song.Album,
-        spotifyUri: spotifyUri,
-        league: song.league,
-        genre: metadata.genre || 'Unknown',
-        totalVotes: totalVotes,
-        voteCount: voteCount,
-        avgVotes: voteCount > 0 ? (totalVotes / voteCount).toFixed(1) : 0,
-        popularity: metadata.popularity || 0,
-        hasMetadata: Object.keys(metadata).length > 0,
-      };
-    });
+    if (!data || !Array.isArray(data)) return [];
+    return data;
   }, [data]);
 
   // Filter by league
   const filteredSongs = useMemo(() => {
     if (selectedLeague === 'all') return songsData;
-    return songsData.filter(song => song.league === selectedLeague);
+    return songsData.filter(song => song.leagueName === selectedLeague);
   }, [songsData, selectedLeague]);
 
   // Sort songs
@@ -97,6 +64,9 @@ const SongsTable = ({ data }) => {
     );
   }
 
+  // Get unique leagues for filter
+  const leagues = [...new Set(songsData.map(s => s.leagueName))].filter(Boolean);
+
   return (
     <div className="space-y-6">
       {/* Controls */}
@@ -108,16 +78,25 @@ const SongsTable = ({ data }) => {
           All submitted songs with metadata, genres, and vote information
         </p>
         <div className="flex gap-2">
-          {['all', 'League 1', 'League 2'].map((league) => (
+          <button
+            onClick={() => setSelectedLeague('all')}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeague === 'all'
+              ? 'bg-mint text-charcoal'
+              : 'bg-charcoal text-smoke hover:text-mist'
+              }`}
+          >
+            All Leagues
+          </button>
+          {leagues.map((league) => (
             <button
               key={league}
               onClick={() => setSelectedLeague(league)}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeague === league
-                  ? 'bg-mint text-charcoal'
-                  : 'bg-charcoal text-smoke hover:text-mist'
+                ? 'bg-mint text-charcoal'
+                : 'bg-charcoal text-smoke hover:text-mist'
                 }`}
             >
-              {league === 'all' ? 'All Leagues' : league}
+              {league}
             </button>
           ))}
         </div>
@@ -149,20 +128,20 @@ const SongsTable = ({ data }) => {
                 </th>
                 <th className="text-left p-4 text-sm font-medium text-smoke">
                   <button
-                    onClick={() => handleSort('genre')}
+                    onClick={() => handleSort('genres')}
                     className="flex items-center gap-2 hover:text-mist transition-colors"
                   >
-                    Genre
-                    <SortIcon field="genre" />
+                    Genres
+                    <SortIcon field="genres" />
                   </button>
                 </th>
                 <th className="text-left p-4 text-sm font-medium text-smoke">
                   <button
-                    onClick={() => handleSort('league')}
+                    onClick={() => handleSort('leagueName')}
                     className="flex items-center gap-2 hover:text-mist transition-colors"
                   >
                     League
-                    <SortIcon field="league" />
+                    <SortIcon field="leagueName" />
                   </button>
                 </th>
                 <th className="text-right p-4 text-sm font-medium text-smoke">
@@ -201,19 +180,23 @@ const SongsTable = ({ data }) => {
                     </td>
                     <td className="p-4 text-smoke">{song.artist}</td>
                     <td className="p-4">
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${song.genre === 'Other'
-                          ? 'bg-smoke/20 text-smoke'
-                          : 'bg-lavender/20 text-lavender'
-                        }`}>
-                        {song.genre}
-                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {song.genres && song.genres.length > 0 ? (
+                          song.genres.slice(0, 3).map((genre, i) => (
+                            <span key={i} className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-lavender/20 text-lavender">
+                              {genre}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-smoke/20 text-smoke">
+                            Unknown
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4">
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${song.league === 'League 1'
-                          ? 'bg-mint/20 text-mint'
-                          : 'bg-cyan-flash/20 text-cyan-flash'
-                        }`}>
-                        {song.league}
+                      <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-cyan-flash/20 text-cyan-flash">
+                        {song.leagueName}
                       </span>
                     </td>
                     <td className="p-4 text-right">
@@ -264,11 +247,6 @@ const SongsTable = ({ data }) => {
         <div className="p-4 bg-charcoal border-t border-smoke/10">
           <p className="text-sm text-smoke text-center">
             Showing {sortedSongs.length} songs
-            {!songsData.every(s => s.hasMetadata) && (
-              <span className="ml-2 text-sun">
-                • Some songs missing metadata
-              </span>
-            )}
           </p>
         </div>
       </div>

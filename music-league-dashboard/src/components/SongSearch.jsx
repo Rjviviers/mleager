@@ -6,13 +6,8 @@ const SongSearch = ({ data }) => {
   const [selectedLeague, setSelectedLeague] = useState('all');
 
   const allSubmissions = useMemo(() => {
-    const league1 = data?.league1?.submissions || [];
-    const league2 = data?.league2?.submissions || [];
-
-    return [
-      ...league1.map(s => ({ ...s, league: 'League 1' })),
-      ...league2.map(s => ({ ...s, league: 'League 2' })),
-    ];
+    if (!data || !Array.isArray(data)) return [];
+    return data;
   }, [data]);
 
   const filteredSongs = useMemo(() => {
@@ -21,13 +16,13 @@ const SongSearch = ({ data }) => {
     const term = searchTerm.toLowerCase();
     let results = allSubmissions.filter(
       (song) =>
-        song.Title?.toLowerCase().includes(term) ||
-        song['Artist(s)']?.toLowerCase().includes(term) ||
-        song.Album?.toLowerCase().includes(term)
+        song.title?.toLowerCase().includes(term) ||
+        song.artist?.toLowerCase().includes(term) ||
+        song.album?.toLowerCase().includes(term)
     );
 
     if (selectedLeague !== 'all') {
-      results = results.filter(s => s.league === selectedLeague);
+      results = results.filter(s => s.leagueName === selectedLeague);
     }
 
     return results;
@@ -36,7 +31,7 @@ const SongSearch = ({ data }) => {
   const duplicateGroups = useMemo(() => {
     const groups = {};
     filteredSongs.forEach((song) => {
-      const key = `${song.Title}-${song['Artist(s)']}`;
+      const key = `${song.title}-${song.artist}`;
       if (!groups[key]) {
         groups[key] = [];
       }
@@ -69,17 +64,25 @@ const SongSearch = ({ data }) => {
 
         {/* League Filter */}
         <div className="flex gap-2 mb-6">
-          {['all', 'League 1', 'League 2'].map((league) => (
+          <button
+            onClick={() => setSelectedLeague('all')}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeague === 'all'
+              ? 'bg-lavender text-white'
+              : 'bg-charcoal text-smoke hover:text-mist'
+              }`}
+          >
+            All Leagues
+          </button>
+          {[...new Set(allSubmissions.map(s => s.leagueName))].filter(Boolean).map((league) => (
             <button
               key={league}
               onClick={() => setSelectedLeague(league)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                selectedLeague === league
-                  ? 'bg-lavender text-white'
-                  : 'bg-charcoal text-smoke hover:text-mist'
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeague === league
+                ? 'bg-lavender text-white'
+                : 'bg-charcoal text-smoke hover:text-mist'
+                }`}
             >
-              {league === 'all' ? 'All Leagues' : league}
+              {league}
             </button>
           ))}
         </div>
@@ -101,16 +104,15 @@ const SongSearch = ({ data }) => {
                 return (
                   <div
                     key={key}
-                    className={`bg-charcoal rounded-lg p-4 border-l-4 ${
-                      isDuplicate
-                        ? 'border-sun'
-                        : 'border-mint'
-                    }`}
+                    className={`bg-charcoal rounded-lg p-4 border-l-4 ${isDuplicate
+                      ? 'border-sun'
+                      : 'border-mint'
+                      }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-mist">{song.Title}</h4>
+                          <h4 className="font-medium text-mist">{song.title}</h4>
                           {isDuplicate && (
                             <span className="flex items-center gap-1 text-xs bg-sun/20 text-sun px-2 py-1 rounded-full">
                               <AlertCircle className="w-3 h-3" />
@@ -125,14 +127,18 @@ const SongSearch = ({ data }) => {
                           )}
                         </div>
                         <p className="text-sm text-smoke">
-                          {song['Artist(s)']} • {song.Album}
+                          {song.artist} • {song.album}
                         </p>
                         <div className="mt-2 space-y-1">
                           {songs.map((s, idx) => (
                             <div key={idx} className="text-xs text-smoke flex items-center gap-2">
-                              <span className="bg-smoke/20 px-2 py-0.5 rounded">{s.league}</span>
-                              <span>•</span>
-                              <span>{new Date(s.Created).toLocaleDateString()}</span>
+                              <span className="bg-smoke/20 px-2 py-0.5 rounded">{s.leagueName}</span>
+                              {s.created && (
+                                <>
+                                  <span>•</span>
+                                  <span>{new Date(s.created).toLocaleDateString()}</span>
+                                </>
+                              )}
                             </div>
                           ))}
                         </div>

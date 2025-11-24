@@ -21,11 +21,15 @@ async function verifyDatabase() {
     console.log('📊 Collection Statistics:');
     console.log('─'.repeat(50));
 
-    const collections = ['leagues', 'competitors', 'rounds', 'submissions', 'votes'];
+    const collections = ['leagues', 'competitors', 'rounds', 'submissions', 'votes', 'genres', 'artist_info', 'song_metadata'];
 
     for (const collectionName of collections) {
-      const count = await db.collection(collectionName).countDocuments();
-      console.log(`${collectionName.padEnd(15)} │ ${count.toString().padStart(6)} documents`);
+      try {
+        const count = await db.collection(collectionName).countDocuments();
+        console.log(`${collectionName.padEnd(15)} │ ${count.toString().padStart(6)} documents`);
+      } catch (e) {
+        console.log(`${collectionName.padEnd(15)} │      0 documents (or error)`);
+      }
     }
 
     console.log('─'.repeat(50));
@@ -50,6 +54,16 @@ async function verifyDatabase() {
       console.log(`    Submissions: ${submissionCount}`);
       console.log(`    Votes: ${voteCount}`);
     }
+
+    // Check Genre Stats
+    console.log('\n🎸 Genre Statistics:');
+    const genreCount = await db.collection('genres').countDocuments();
+    const artistCount = await db.collection('artist_info').countDocuments();
+    const songsWithGenre = await db.collection('song_metadata').countDocuments({ genre: { $ne: null } });
+
+    console.log(`  Total Genres: ${genreCount}`);
+    console.log(`  Total Artists: ${artistCount}`);
+    console.log(`  Songs with Genre: ${songsWithGenre}`);
 
     // Sample some data
     console.log('\n📝 Sample Data:');
@@ -76,11 +90,15 @@ async function verifyDatabase() {
     console.log('─'.repeat(50));
 
     for (const collectionName of collections) {
-      const indexes = await db.collection(collectionName).indexes();
-      console.log(`\n${collectionName}:`);
-      for (const index of indexes) {
-        const keys = Object.keys(index.key).join(', ');
-        console.log(`  - ${index.name}: [${keys}]`);
+      try {
+        const indexes = await db.collection(collectionName).indexes();
+        console.log(`\n${collectionName}:`);
+        for (const index of indexes) {
+          const keys = Object.keys(index.key).join(', ');
+          console.log(`  - ${index.name}: [${keys}]`);
+        }
+      } catch (e) {
+        // Ignore if collection doesn't exist
       }
     }
 
@@ -102,4 +120,3 @@ async function verifyDatabase() {
 }
 
 verifyDatabase();
-

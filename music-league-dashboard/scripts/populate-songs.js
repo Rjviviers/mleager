@@ -13,7 +13,17 @@ const __dirname = path.dirname(__filename);
 
 async function connectDB() {
     const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://admin:admin123@localhost:27017';
+    const DB_NAME = process.env.MONGODB_DB_NAME || 'music_league';
+
     let connectionString = MONGODB_URL;
+    if (!connectionString.endsWith('/')) {
+        connectionString += '/';
+    }
+    // If DB_NAME is not in the URL, append it
+    if (!connectionString.includes(DB_NAME)) {
+        connectionString += DB_NAME;
+    }
+
     if (!connectionString.includes('authSource')) {
         const separator = connectionString.includes('?') ? '&' : '?';
         connectionString += `${separator}authSource=admin`;
@@ -26,18 +36,6 @@ async function populateSongs() {
     console.log('🚀 Starting Song population...');
 
     try {
-        // Debug: Check if any submissions exist
-        const count = await Submission.countDocuments();
-        console.log(`Total submissions in DB: ${count}`);
-
-        if (count === 0) {
-            console.log('⚠️ No submissions found. Skipping population.');
-            return;
-        }
-
-        const sample = await Submission.findOne();
-        console.log('Sample submission:', JSON.stringify(sample, null, 2));
-
         // 1. Aggregate Submissions to count occurrences of each spotifyUri
         const submissionCounts = await Submission.aggregate([
             {
@@ -66,24 +64,48 @@ async function populateSongs() {
             // Fallback if artists is not an array or is missing
             if (!artists) {
                 artists = ['Unknown Artist'];
-            } else if (typeof artists === 'string') {
+            } else if (!Array.isArray(artists)) {
                 artists = [artists];
             }
+
+            // Map artist objects to strings (names)
+            artists = artists.map(artist => {
+                if (typeof artist === 'object' && artist !== null && artist.name) {
+                    return artist.name;
+                }
+                return String(artist);
+            });
 
             if (!name) {
                 name = 'Unknown Title';
             }
 
-            // 3. Upsert Song document
-            await Song.findOneAndUpdate(
-                { metadataId: spotifyUri },
-                {
-                    name: name,
-                    artists: artists,
-                    submissionCount: count
-                },
-                { upsert: true, new: true }
-            );
+            let genres = [];
+            if (metadata) {
+                if (metadata.allGenres && metadata.allGenres.length > 0) {
+                    genres = metadata.allGenres;
+                } else if (metadata.genres && metadata.genres.length > 0) {
+                    genres = metadata.genres;
+                }
+            }
+
+            if (metadata) {
+                // 3. Upsert Song document
+                await Song.findOneAndUpdate(
+                    { metadataId: metadata._id },
+                    {
+                        name: name,
+                        artists: artists,
+                        name: name,
+                        artists: artists,
+                        submissionCount: count,
+                        genres: genres
+                    },
+                    { upsert: true, new: true }
+                );
+            } else {
+                console.warn(`⚠️ Metadata not found for ${spotifyUri}. Skipping Song creation.`);
+            }
             // process.stdout.write('.');
         }
 

@@ -10,9 +10,11 @@
  * Some artists may have no genres assigned.
  */
 
-import { MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
+import { ArtistInfo } from '../src/models/ArtistInfo.js';
+import { SongMetadata } from '../src/models/SongMetadata.js';
 
 dotenv.config();
 
@@ -135,8 +137,26 @@ class SpotifyGenreClient {
   }
 }
 
+async function connectToDatabase() {
+  let connectionString = MONGODB_URL;
+  if (!connectionString.endsWith('/')) {
+    connectionString += '/';
+  }
+  if (!connectionString.includes(DB_NAME)) {
+    connectionString += DB_NAME;
+  }
+
+  if (!connectionString.includes('authSource')) {
+    const separator = connectionString.includes('?') ? '&' : '?';
+    connectionString += `${separator}authSource=admin`;
+  }
+
+  console.log('Connecting to MongoDB...');
+  await mongoose.connect(connectionString);
+  console.log('✅ Connected to MongoDB\n');
+}
+
 async function fetchGenres() {
-  const mongoClient = new MongoClient(MONGODB_URL);
   const spotifyClient = new SpotifyGenreClient();
 
   try {
@@ -151,22 +171,18 @@ async function fetchGenres() {
     }
 
     // Connect to MongoDB
-    console.log('Connecting to MongoDB...');
-    await mongoClient.connect();
-    console.log('✅ Connected to MongoDB\n');
-
-    const db = mongoClient.db(DB_NAME);
+    await connectToDatabase();
 
     // Get all unique artist IDs from song metadata or submissions
     console.log('📊 Finding all artists...');
 
     // First, try to get from song_metadata if it exists
     let artistIds = new Set();
-    const metadataCount = await db.collection('song_metadata').countDocuments();
+    const metadataCount = await SongMetadata.countDocuments();
 
     if (metadataCount > 0) {
       console.log(`Found ${metadataCount} songs with metadata, extracting artists...`);
-      const metadata = await db.collection('song_metadata').find({}).toArray();
+      const metadata = await SongMetadata.find({});
 
       metadata.forEach(song => {
         if (song.artists && Array.isArray(song.artists)) {
@@ -194,11 +210,7 @@ async function fetchGenres() {
     // Filter out artists we already have (unless force mode)
     let artistsToFetch = uniqueArtistIds;
     if (!force) {
-      const existingArtists = await db.collection('artist_info')
-        .find({ artistId: { $in: uniqueArtistIds } })
-        .project({ artistId: 1 })
-        .toArray();
-
+      const existingArtists = await ArtistInfo.find({ artistId: { $in: uniqueArtistIds } }).select('artistId');
       const existingIds = new Set(existingArtists.map(a => a.artistId));
       artistsToFetch = uniqueArtistIds.filter(id => !existingIds.has(id));
 
@@ -211,7 +223,7 @@ async function fetchGenres() {
       console.log('Use --force to re-fetch existing data\n');
 
       // Show genre statistics
-      await showGenreStats(db);
+      await showGenreStats();
       return;
     }
 
@@ -238,11 +250,19 @@ async function fetchGenres() {
           }
         }));
 
-        const result = await db.collection('artist_info').bulkWrite(bulkOps);
+        const result = await ArtistInfo.bulkWrite(bulkOps);
         console.log(`✅ Upserted ${result.upsertedCount + result.modifiedCount} artist records`);
       } else {
-        await db.collection('artist_info').insertMany(artistInfo);
-        console.log(`✅ Inserted ${artistInfo.length} new artist records`);
+        // Use bulkWrite with upsert even for non-force to handle potential race conditions or duplicates
+        const bulkOps = artistInfo.map(info => ({
+          updateOne: {
+            filter: { artistId: info.artistId },
+            update: { $set: info },
+            upsert: true
+          }
+        }));
+        const result = await ArtistInfo.bulkWrite(bulkOps);
+        console.log(`✅ Inserted/Updated ${result.upsertedCount + result.modifiedCount} artist records`);
       }
 
       // NEW: Update song_metadata with genres
@@ -258,13 +278,11 @@ async function fetchGenres() {
       });
 
       // Find songs that match these artists
-      let updatedSongsCount = 0;
-
       // We need to iterate through songs and update them if their artist matches
       // This is a bit complex because songs have an array of artists
 
       // Get all songs
-      const allSongs = await db.collection('song_metadata').find({}).toArray();
+      const allSongs = await SongMetadata.find({});
 
       const songBulkOps = [];
 
@@ -282,7 +300,11 @@ async function fetchGenres() {
             allGenres.push(artistGenre);
           } else {
             // Try to look up in DB if not in current batch
-            // (Optimization: load all artist info first? For now, this script usually runs on all artists)
+            // We could do this, but it might be slow to query for every artist.
+            // Since we are processing a batch of new artists, we only care about updates related to THESE artists.
+            // But if we want to be thorough, we should probably load all artist genres into memory if possible, or just rely on the fact that we are iterating all songs.
+            // Let's stick to updating based on the *newly fetched* artists for now to be efficient.
+            // If we want to backfill everything, we should run seed-genres.js
           }
         }
 
@@ -302,7 +324,7 @@ async function fetchGenres() {
       }
 
       if (songBulkOps.length > 0) {
-        const songResult = await db.collection('song_metadata').bulkWrite(songBulkOps);
+        const songResult = await SongMetadata.bulkWrite(songBulkOps);
         console.log(`✅ Updated genres for ${songResult.modifiedCount} songs`);
       } else {
         console.log(`ℹ️ No songs needed genre updates from this batch`);
@@ -321,7 +343,7 @@ async function fetchGenres() {
 
     // Show genre statistics
     console.log('');
-    await showGenreStats(db);
+    await showGenreStats();
 
     console.log('\n✅ Genre fetch complete!');
 
@@ -329,16 +351,16 @@ async function fetchGenres() {
     console.error('\n❌ Error during genre fetch:', error);
     process.exit(1);
   } finally {
-    await mongoClient.close();
+    await mongoose.disconnect();
     console.log('\nMongoDB connection closed');
   }
 }
 
-async function showGenreStats(db) {
+async function showGenreStats() {
   console.log('=== Genre Statistics ===');
 
-  const totalArtists = await db.collection('artist_info').countDocuments();
-  const artistsWithGenres = await db.collection('artist_info').countDocuments({
+  const totalArtists = await ArtistInfo.countDocuments();
+  const artistsWithGenres = await ArtistInfo.countDocuments({
     genres: { $exists: true, $not: { $size: 0 } }
   });
   const artistsWithoutGenres = totalArtists - artistsWithGenres;
@@ -348,12 +370,12 @@ async function showGenreStats(db) {
   console.log(`Artists without genres: ${artistsWithoutGenres}`);
 
   // Get top genres
-  const genreAgg = await db.collection('artist_info').aggregate([
+  const genreAgg = await ArtistInfo.aggregate([
     { $unwind: '$genres' },
     { $group: { _id: '$genres', count: { $sum: 1 } } },
     { $sort: { count: -1 } },
     { $limit: 10 }
-  ]).toArray();
+  ]);
 
   if (genreAgg.length > 0) {
     console.log('\nTop 10 Genres:');
@@ -364,4 +386,3 @@ async function showGenreStats(db) {
 }
 
 fetchGenres();
-

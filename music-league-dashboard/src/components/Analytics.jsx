@@ -1,184 +1,65 @@
 import { useState, useEffect, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, ScatterChart, Scatter } from 'recharts';
+import { fetchLeagueAnalytics } from '../utils/dataLoader';
 
 const COLORS = ['#4EE2B5', '#2EC9FF', '#A178F1', '#E044A7', '#FFE200'];
 
 const Analytics = ({ data }) => {
-  const [selectedLeague, setSelectedLeague] = useState('league1');
-  const [viewType, setViewType] = useState('genre');
-  const [fetchedData, setFetchedData] = useState({}); // { [leagueKey]: { competitors, rounds, submissions, votes } }
-  const [loading, setLoading] = useState(false);
+  // data prop here is just { leagues: [...] } passed from App.jsx when view is 'analytics'
+  // We need to fetch specific analytics data based on selected league.
 
-  // Load data for the selected league using granular endpoints
+  const [selectedLeagueId, setSelectedLeagueId] = useState(null);
+  const [viewType, setViewType] = useState('genre');
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Initialize selected league
   useEffect(() => {
-    const loadLeagueData = async () => {
+    if (data?.leagues?.length > 0 && !selectedLeagueId) {
+      setSelectedLeagueId(data.leagues[0]._id);
+    }
+  }, [data, selectedLeagueId]);
+
+  // Fetch analytics when league changes
+  useEffect(() => {
+    const loadAnalytics = async () => {
+      if (!selectedLeagueId) return;
+
       setLoading(true);
+      setError(null);
       try {
-        // Get all leagues to map name to id
-        const leaguesRes = await fetch('/api/leagues');
-        const leagues = await leaguesRes.json();
-        const league = leagues.find(l => l.name.toLowerCase().replace(' ', '') === selectedLeague);
-        if (!league) {
-          console.warn('League not found for', selectedLeague);
-          setLoading(false);
-          return;
-        }
-        const leagueId = league._id;
-        const [competitors, rounds] = await Promise.all([
-          fetch(`/api/competitors/${leagueId}`).then(r => r.json()),
-          fetch(`/api/rounds/${leagueId}`).then(r => r.json())
-        ]);
-        // Fetch submissions and votes for each round
-        const submissionsPromises = rounds.map(r => fetch(`/api/submissions/${r._id}`).then(res => res.json()));
-        const votesPromises = rounds.map(r => fetch(`/api/votes/${r._id}`).then(res => res.json()));
-        const submissionsArrays = await Promise.all(submissionsPromises);
-        const votesArrays = await Promise.all(votesPromises);
-        const submissions = submissionsArrays.flat();
-        const votes = votesArrays.flat();
-        // Enrich submissions with metadata (single call per unique spotifyUri)
-        const allMetadata = new Map();
-        const enrichedSubmissions = await Promise.all(submissions.map(async (sub) => {
-          let metadata = allMetadata.get(sub.spotifyUri);
-          if (!metadata) {
-            const metaRes = await fetch(`/api/metadata/${sub.metadataId}`);
-            metadata = await metaRes.json();
-            if (metadata) allMetadata.set(sub.spotifyUri, metadata);
-          }
-          return { ...sub, metadata: metadata || null };
-        }));
-        const leagueKey = selectedLeague;
-        setFetchedData(prev => ({
-          ...prev,
-          [leagueKey]: { competitors, rounds, submissions: enrichedSubmissions, votes }
-        }));
+        const stats = await fetchLeagueAnalytics(selectedLeagueId);
+        setAnalyticsData(stats);
       } catch (err) {
-        console.error('Error loading league data', err);
+        console.error('Error loading analytics:', err);
+        setError('Failed to load analytics data');
       } finally {
         setLoading(false);
       }
     };
-    loadLeagueData();
-  }, [selectedLeague]);
 
-  const leagueData = fetchedData[selectedLeague];
+    loadAnalytics();
+  }, [selectedLeagueId]);
 
-  // Analyze votes by genre (using real genre data from metadata)
-  const genreAnalysis = useMemo(() => {
-    if (!leagueData) return [];
+  if (!data?.leagues) {
+    return <div className="text-center py-12 text-smoke">Loading leagues...</div>;
+  }
 
-    const genreVotes = {};
-    const genreSubmissions = {};
-    const genreData = {};  // Store additional genre info
-
-    leagueData.submissions.forEach((submission) => {
-      const spotifyUri = submission['Spotify URI'];
-      const metadata = submission.metadata;
-
-      // Get genre from metadata, skip if not available
-      const genre = metadata?.genre;
-      if (!genre) return;
-
-      // Initialize genre tracking
-      if (!genreSubmissions[genre]) {
-        genreSubmissions[genre] = new Set();
-        genreData[genre] = {
-          allGenresCount: new Set(),  // Track unique genre combinations
-          songs: []
-        };
-      }
-
-      genreSubmissions[genre].add(spotifyUri);
-
-      // Track all genres for this song
-      if (metadata?.allGenres && metadata.allGenres.length > 0) {
-        metadata.allGenres.forEach(g => genreData[genre].allGenresCount.add(g));
-      }
-
-      // Store song info
-      genreData[genre].songs.push({
-        title: submission.Title,
-        artist: submission['Artist(s)'],
-        spotifyUri
-      });
-
-      // Calculate votes
-      const votes = leagueData.votes.filter(v => v['Spotify URI'] === spotifyUri);
-      const totalPoints = votes.reduce((sum, v) => sum + parseInt(v['Points Assigned'] || 0), 0);
-
-      genreVotes[genre] = (genreVotes[genre] || 0) + totalPoints;
-    });
-
-    return Object.entries(genreVotes)
-      .map(([genre, votes]) => ({
-        genre,
-        votes,
-        submissions: genreSubmissions[genre]?.size || 0,
-        avgVotes: Math.round(votes / (genreSubmissions[genre]?.size || 1)),
-        relatedGenres: Array.from(genreData[genre]?.allGenresCount || []).length,
-      }))
-      .sort((a, b) => b.votes - a.votes);
-  }, [leagueData]);
-
-  // Analyze votes by artist
-  const artistAnalysis = useMemo(() => {
-    if (!leagueData) return [];
-
-    const artistVotes = {};
-
-    leagueData.submissions.forEach((submission) => {
-      const artist = submission['Artist(s)'];
-      const spotifyUri = submission['Spotify URI'];
-
-      const votes = leagueData.votes.filter(v => v['Spotify URI'] === spotifyUri);
-      const totalPoints = votes.reduce((sum, v) => sum + parseInt(v['Points Assigned'] || 0), 0);
-
-      if (artistVotes[artist]) {
-        artistVotes[artist].votes += totalPoints;
-        artistVotes[artist].submissions += 1;
-      } else {
-        artistVotes[artist] = {
-          artist,
-          votes: totalPoints,
-          submissions: 1,
-        };
-      }
-    });
-
-    return Object.values(artistVotes)
-      .map(data => ({
-        ...data,
-        avgVotes: Math.round(data.votes / data.submissions),
-      }))
-      .sort((a, b) => b.votes - a.votes)
-      .slice(0, 10);
-  }, [leagueData]);
-
-  // Analyze popularity vs votes
-  const popularityAnalysis = useMemo(() => {
-    if (!leagueData) return [];
-
-    return leagueData.submissions.slice(0, 50).map((submission) => {
-      const spotifyUri = submission['Spotify URI'];
-      const votes = leagueData.votes.filter(v => v['Spotify URI'] === spotifyUri);
-      const totalPoints = votes.reduce((sum, v) => sum + parseInt(v['Points Assigned'] || 0), 0);
-      const popularity = submission.metadata?.popularity || 0;
-
-      return {
-        title: submission.Title,
-        artist: submission['Artist(s)'],
-        votes: totalPoints,
-        popularity,
-      };
-    });
-  }, [leagueData]);
-
-  if (loading || !leagueData) {
+  if (loading && !analyticsData) {
     return (
       <div className="text-center py-12 text-smoke">
+        <div className="inline-block w-8 h-8 border-4 border-mint border-t-transparent rounded-full animate-spin mb-4"></div>
         <p>Loading analytics data...</p>
       </div>
     );
   }
+
+  if (error) {
+    return <div className="text-center py-12 text-magenta">{error}</div>;
+  }
+
+  const { genreAnalysis = [], artistAnalysis = [], popularityAnalysis = [] } = analyticsData || {};
 
   return (
     <div className="space-y-6">
@@ -188,24 +69,18 @@ const Analytics = ({ data }) => {
           <div>
             <label className="text-sm text-smoke mb-2 block">League</label>
             <div className="flex gap-2">
-              <button
-                onClick={() => setSelectedLeague('league1')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeague === 'league1'
-                  ? 'bg-mint text-charcoal'
-                  : 'bg-charcoal text-smoke hover:text-mist'
-                  }`}
-              >
-                League 1
-              </button>
-              <button
-                onClick={() => setSelectedLeague('league2')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeague === 'league2'
-                  ? 'bg-mint text-charcoal'
-                  : 'bg-charcoal text-smoke hover:text-mist'
-                  }`}
-              >
-                League 2
-              </button>
+              {data.leagues.map(league => (
+                <button
+                  key={league._id}
+                  onClick={() => setSelectedLeagueId(league._id)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selectedLeagueId === league._id
+                    ? 'bg-mint text-charcoal'
+                    : 'bg-charcoal text-smoke hover:text-mist'
+                    }`}
+                >
+                  {league.name}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -228,8 +103,6 @@ const Analytics = ({ data }) => {
           </div>
         </div>
       </div>
-
-
 
       {/* Genre Analysis */}
       {viewType === 'genre' && (
@@ -263,9 +136,6 @@ const Analytics = ({ data }) => {
             {genreAnalysis.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-smoke mb-2">No genre data available</p>
-                <p className="text-sm text-smoke/70">
-                  Run <code className="bg-charcoal px-2 py-1 rounded">node scripts/seed-genres.js</code> and <code className="bg-charcoal px-2 py-1 rounded">npm run export-metadata</code> to populate genre data
-                </p>
               </div>
             ) : (
               <>
@@ -343,11 +213,13 @@ const Analytics = ({ data }) => {
                           content={({ payload }) => {
                             if (payload && payload.length) {
                               const data = payload[0].payload;
+                              // Calculate percentage based on total submissions in top 8 or total?
+                              // Let's just show count.
                               return (
                                 <div className="bg-graphite p-3 rounded-lg border border-smoke/20">
                                   <p className="text-mist font-medium mb-1">{data.genre}</p>
                                   <div className="space-y-1 text-sm">
-                                    <p className="text-mint">{data.submissions} songs ({Math.round(data.submissions / leagueData.submissions.length * 100)}%)</p>
+                                    <p className="text-mint">{data.submissions} songs</p>
                                     <p className="text-smoke">{data.votes} total votes</p>
                                     <p className="text-smoke">{data.avgVotes} avg votes</p>
                                   </div>
@@ -542,4 +414,3 @@ const Analytics = ({ data }) => {
 };
 
 export default Analytics;
-

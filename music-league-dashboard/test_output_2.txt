@@ -1,0 +1,397 @@
+npm warn Unknown cli config "--t". This will stop working in the next major version of npm.
+npm warn Unknown cli config "--run". This will stop working in the next major version of npm.
+
+> music-league-dashboard@0.0.0 test
+> vitest tests/backend/api.test.js GET /api/stats/overview
+
+
+[1m[44m DEV [49m[22m [34mv3.2.4 [39m[90mF:/software/m/mleager/music-league-dashboard[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ÔÜÖ´©Å  write to custom object with { processEnv: myObject }
+
+[90mstdout[2m | tests/backend/api.test.js[2m > [22m[2mBackend API[2m > [22m[2mGET /api/leagues[2m > [22m[2mshould return all leagues
+[22m[39mFetched leagues: [ { _id: [32m'1'[39m, name: [32m'League 1'[39m } ]
+
+[90mstdout[2m | tests/backend/api.test.js[2m > [22m[2mBackend API[2m > [22m[2mGET /api/stats/overview[2m > [22m[2mshould return overview stats
+[22m[39mCounts: {
+  totalSubmissions: [33m100[39m,
+  totalVotes: [33m500[39m,
+  totalRounds: [33m10[39m,
+  totalCompetitors: [33m20[39m
+}
+
+stderr | tests/backend/api.test.js > Backend API > GET /api/stats/overview > should return overview stats
+Error fetching overview stats: TypeError: l.recentRounds.map is not a function
+    at F:\software\m\mleager\music-league-dashboard\src\controllers\statsController.js:47:73
+    at Array.flatMap (<anonymous>)
+    at getOverviewStats (F:\software\m\mleager\music-league-dashboard\src\controllers\statsController.js:47:45)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stderr | tests/backend/api.test.js > Backend API > GET /api/stats/overview > should return overview stats
+{ error: 'Failed to fetch overview stats' }
+
+ [31mÔØ»[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 33[2mms[22m[39m
+   [32mÔ£ô[39m Backend API[2m > [22mGET /api/leagues[2m > [22mshould return all leagues[32m 15[2mms[22m[39m
+[31m   [31m├ù[31m Backend API[2m > [22mGET /api/stats/overview[2m > [22mshould return overview stats[39m[32m 11[2mms[22m[39m
+[31m     ÔåÆ expected 500 to be 200 // Object.is equality[39m
+   [32mÔ£ô[39m Backend API[2m > [22mGET /api/songs[2m > [22mshould return aggregated songs[32m 5[2mms[22m[39m
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ» Failed Tests 1 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+
+ FAIL  tests/backend/api.test.js > Backend API > GET /api/stats/overview > should return overview stats
+AssertionError: expected 500 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 500
+
+ ÔØ» tests/backend/api.test.js:94:30
+     92|             if (res.status !== 200) console.error(res.body);
+     93|             expect(res.status).toBe(200);
+     94|             expect(res.body).toHaveProperty('totalSubmissions', 100);
+       |                              ^
+     95|             expect(res.body).toHaveProperty('totalVotes', 500);
+     96|             expect(res.body).toHaveProperty('totalRounds', 10);
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/1]ÔÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 14:41:44
+[2m   Duration [22m 2.17s[2m (transform 68ms, setup 0ms, collect 723ms, tests 33ms, environment 813ms, prepare 376ms)[22m
+
+[1m[41m FAIL [49m[22m [31mTests failed. Watching for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2mtests/backend/api.test.js [22m[34mx1 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒöä add secrets lifecycle management: https://dotenvx.com/ops
+
+ [2m[90mÔåô[39m[22m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m
+
+[2m Test Files [22m [33m1 skipped[39m[90m (1)[39m
+[2m      Tests [22m [90m (3)[39m
+[2m   Start at [22m 14:42:18
+[2m   Duration [22m 927ms
+
+[1m[41m CANCELLED [49m[22m [31mTest run cancelled. Watching for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/controllers/leagueController.js [22m[34mx2 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒôí add observability to secrets: https://dotenvx.com/ops
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:18:13
+[2m   Duration [22m 1.07s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/controllers/statsController.js [22m[34mx3 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒôí add observability to secrets: https://dotenvx.com/ops
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:18:16
+[2m   Duration [22m 911ms
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2mtests/backend/api.test.js [22m[34mx4 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒøá´©Å  run anywhere with `dotenvx run -- yourcommand`
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:18:18
+[2m   Duration [22m 908ms
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2mtests/backend/api.test.js [22m[34mx5 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒøá´©Å  run anywhere with `dotenvx run -- yourcommand`
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:18:21
+[2m   Duration [22m 806ms
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2mtests/backend/api.test.js [22m[34mx6 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒöä add secrets lifecycle management: https://dotenvx.com/ops
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:18:23
+[2m   Duration [22m 965ms
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/controllers/songController.js [22m[34mx7 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ÔÜÖ´©Å  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:30:56
+[2m   Duration [22m 917ms
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2mtests/backend/api.test.js [22m[34mx8 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: Ô£à audit secrets and track compliance: https://dotenvx.com/ops
+
+ [31mÔØ»[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 50[2mms[22m[39m
+   [32mÔ£ô[39m Backend API[2m > [22mGET /api/leagues[2m > [22mshould return all leagues[32m 22[2mms[22m[39m
+   [32mÔ£ô[39m Backend API[2m > [22mGET /api/stats/overview[2m > [22mshould return overview stats[32m 6[2mms[22m[39m
+[31m   [31m├ù[31m Backend API[2m > [22mGET /api/songs[2m > [22mshould return aggregated songs[39m[32m 21[2mms[22m[39m
+[31m     ÔåÆ expected { title: 'Song 1', ÔÇª(4) } to have property "created"[39m
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ» Failed Tests 1 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+
+ FAIL  tests/backend/api.test.js > Backend API > GET /api/songs > should return aggregated songs
+
+AssertionError: expected { title: 'Song 1', ÔÇª(4) } to have property "created"
+ ÔØ» tests/backend/api.test.js:106:12
+    104|             expect(res.body[0]).toHaveProperty('avgVotes', '5.0');
+    105|             expect(res.body[0]).toHaveProperty('created');
+    106|         });
+       |            ^
+    107|     });
+    108| });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/1]ÔÄ»
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:31:55
+[2m   Duration [22m 920ms
+
+[1m[41m FAIL [49m[22m [31mTests failed. Watching for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2mtests/backend/api.test.js [22m[34mx9 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒöÉ prevent building .env in docker: https://dotenvx.com/prebuild
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:32:20
+[2m   Duration [22m 1.10s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/controllers/songController.js [22m[34mx10 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒöä add secrets lifecycle management: https://dotenvx.com/ops
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:42:55
+[2m   Duration [22m 1.33s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/controllers/statsController.js [22m[34mx11 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ÔÜÖ´©Å  enable debug logging with { debug: true }
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:42:58
+[2m   Duration [22m 1.18s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/controllers/songController.js [22m[34mx12 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ÔÜÖ´©Å  load multiple .env files with { path: ['.env.local', '.env'] }
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 90[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:49:54
+[2m   Duration [22m 1.33s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2mtests/backend/api.test.js [22m[34mx13 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ÔÜÖ´©Å  specify custom .env file path with { path: '/custom/path/.env' }
+
+ [31mÔØ»[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 55[2mms[22m[39m
+   [32mÔ£ô[39m Backend API[2m > [22mGET /api/leagues[2m > [22mshould return all leagues[32m 23[2mms[22m[39m
+   [32mÔ£ô[39m Backend API[2m > [22mGET /api/stats/overview[2m > [22mshould return overview stats[32m 15[2mms[22m[39m
+[31m   [31m├ù[31m Backend API[2m > [22mGET /api/songs[2m > [22mshould return aggregated songs[39m[32m 15[2mms[22m[39m
+[31m     ÔåÆ expected { title: 'Song 1', ÔÇª(6) } to have property "genres"[39m
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ» Failed Tests 1 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+
+ FAIL  tests/backend/api.test.js > Backend API > GET /api/songs > should return aggregated songs
+AssertionError: expected { title: 'Song 1', ÔÇª(6) } to have property "genres"
+ ÔØ» tests/backend/api.test.js:107:33
+    105|             expect(res.body[0]).toHaveProperty('created');
+    106|             expect(res.body[0]).toHaveProperty('genres');
+    107|             expect(Array.isArray(res.body[0].genres)).toBe(true);
+       |                                 ^
+    108|             expect(res.body[0]).toHaveProperty('album');
+    109|         });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/1]ÔÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:50:04
+[2m   Duration [22m 1.06s
+
+[1m[41m FAIL [49m[22m [31mTests failed. Watching for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2mtests/backend/api.test.js [22m[34mx14 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:50:29
+[2m   Duration [22m 1.88s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2mtests/backend/api.test.js [22m[34mx15 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ÔÜÖ´©Å  write to custom object with { processEnv: myObject }
+
+ [31mÔØ»[39m tests/backend/api.test.js [2m([22m[2m7 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 108[2mms[22m[39m
+   [32mÔ£ô[39m Backend API[2m > [22mGET /api/leagues[2m > [22mshould return all leagues[32m 20[2mms[22m[39m
+   [32mÔ£ô[39m Backend API[2m > [22mGET /api/stats/overview[2m > [22mshould return overview stats[32m 6[2mms[22m[39m
+   [32mÔ£ô[39m Backend API[2m > [22mGET /api/songs[2m > [22mshould return aggregated songs[32m 5[2mms[22m[39m
+   [32mÔ£ô[39m Backend API[2m > [22mGET /api/leagues/:leagueId[2m > [22mshould return league details[32m 36[2mms[22m[39m
+   [32mÔ£ô[39m Backend API[2m > [22mGET /api/leagues/:leagueId[2m > [22mshould return 404 if league not found[32m 5[2mms[22m[39m
+[31m   [31m├ù[31m Backend API[2m > [22mGET /api/rounds/:roundId[2m > [22mshould return round details[39m[32m 33[2mms[22m[39m
+[31m     ÔåÆ Cannot read properties of undefined (reading 'mockResolvedValue')[39m
+[31m   [31m├ù[31m Backend API[2m > [22mGET /api/rounds/:roundId[2m > [22mshould return 404 if round not found[39m[32m 1[2mms[22m[39m
+[31m     ÔåÆ Cannot read properties of undefined (reading 'mockResolvedValue')[39m
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ» Failed Tests 2 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+
+ FAIL  tests/backend/api.test.js > Backend API > GET /api/rounds/:roundId > should return round details
+TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+ ÔØ» tests/backend/api.test.js:140:30
+    138|             const round = { _id: 'r1', name: 'Round 1' };
+    139|             mocks.round.findOne.mockResolvedValue(round);
+    140|             mocks.submission.find.mockResolvedValue([{ spotifyUri: 'urÔÇª
+       |                              ^
+    141|             mocks.vote.find.mockResolvedValue([]);
+    142|             mocks.songMetadata.findOne.mockResolvedValue({ title: 'SonÔÇª
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/2]ÔÄ»
+
+ FAIL  tests/backend/api.test.js > Backend API > GET /api/rounds/:roundId > should return 404 if round not found
+TypeError: Cannot read properties of undefined (reading 'mockResolvedValue')
+ ÔØ» tests/backend/api.test.js:154:31
+    152|         it('should return 404 if round not found', async () => {
+    153|             mocks.round.findOne.mockResolvedValue(null);
+    154|             const res = await request(app).get('/api/rounds/unknown');
+       |                               ^
+    155|             expect(res.status).toBe(404);
+    156|         });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[2/2]ÔÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m5 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 16:55:48
+[2m   Duration [22m 1.15s
+
+[1m[41m FAIL [49m[22m [31mTests failed. Watching for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2mtests/backend/api.test.js [22m[34mx16 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ­ƒöä add secrets lifecycle management: https://dotenvx.com/ops
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 16:56:58
+[2m   Duration [22m 567ms
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m
+c[3J[1m[44m RERUN [49m[22m [34m[2msrc/models/SongMetadata.js [22m[34mx17 [34m[39m
+       [2m Filename pattern: [22m[34mtests/backend/api.test.js, GET /api/stats/overview[39m
+
+[90mstdout[2m | tests/backend/api.test.js
+[22m[39m[dotenv@17.2.3] injecting env (10) from .env -- tip: ÔÜÖ´©Å  specify custom .env file path with { path: '/custom/path/.env' }
+
+ [32mÔ£ô[39m tests/backend/api.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 17:22:46
+[2m   Duration [22m 1.08s
+
+[1m[42m PASS [49m[22m [32mWaiting for file changes...[39m
+       [2mpress [22m[1mh[22m[2m to show help[22m[2m, [22m[2mpress [22m[1mq[22m[2m to quit[22m

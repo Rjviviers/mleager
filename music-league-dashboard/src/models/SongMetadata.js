@@ -11,6 +11,8 @@ const songMetadataSchema = new mongoose.Schema({
     duration_ms: { type: Number },
     explicit: { type: Boolean },
     genres: { type: [String] },
+    allGenres: { type: [String] },
+    genre: { type: String },
     energy: { type: Number },
     danceability: { type: Number },
     valence: { type: Number },

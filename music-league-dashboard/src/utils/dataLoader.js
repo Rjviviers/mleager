@@ -35,41 +35,38 @@ export const loadAllData = async () => {
   }
 };
 
-// New granular fetch functions with validation
-
 export const fetchLeagues = async () => {
   const response = await fetch('/api/leagues');
   if (!response.ok) throw new Error('Failed to fetch leagues');
-  const data = await response.json();
-  return LeagueResponseSchema.parse(data);
+  return response.json();
 };
 
-export const fetchCompetitors = async (leagueId) => {
-  const response = await fetch(`/api/competitors/${leagueId}`);
-  if (!response.ok) throw new Error('Failed to fetch competitors');
-  const data = await response.json();
-  return CompetitorResponseSchema.parse(data);
+export const fetchLeagueDetails = async (leagueId) => {
+  const response = await fetch(`/api/leagues/${leagueId}`);
+  if (!response.ok) throw new Error('Failed to fetch league details');
+  return response.json();
 };
 
-export const fetchRounds = async (leagueId) => {
-  const response = await fetch(`/api/rounds/${leagueId}`);
-  if (!response.ok) throw new Error('Failed to fetch rounds');
-  const data = await response.json();
-  return RoundResponseSchema.parse(data);
+export const fetchRoundDetails = async (roundId) => {
+  const response = await fetch(`/api/rounds/${roundId}`);
+  if (!response.ok) throw new Error('Failed to fetch round details');
+  return response.json();
 };
 
-export const fetchSubmissions = async (roundId) => {
-  const response = await fetch(`/api/submissions/${roundId}`);
-  if (!response.ok) throw new Error('Failed to fetch submissions');
-  const data = await response.json();
-  // Note: Validation might fail if backend returns extra fields not in schema and schema is strict.
-  // Zod default is to strip unknown keys.
-  return SubmissionResponseSchema.parse(data);
+export const fetchOverviewStats = async () => {
+  const response = await fetch('/api/stats/overview');
+  if (!response.ok) throw new Error('Failed to fetch overview stats');
+  return response.json();
 };
 
-export const fetchVotes = async (roundId) => {
-  const response = await fetch(`/api/votes/${roundId}`);
-  if (!response.ok) throw new Error('Failed to fetch votes');
-  const data = await response.json();
-  return VoteResponseSchema.parse(data);
+export const fetchAllSongs = async () => {
+  const response = await fetch('/api/songs');
+  if (!response.ok) throw new Error('Failed to fetch songs');
+  return response.json();
+};
+
+export const fetchLeagueAnalytics = async (leagueId) => {
+  const response = await fetch(`/api/stats/league/${leagueId}`);
+  if (!response.ok) throw new Error('Failed to fetch league analytics');
+  return response.json();
 };
